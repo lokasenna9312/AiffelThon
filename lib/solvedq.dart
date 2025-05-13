@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 
-class RegisterPage extends StatelessWidget {
+class SolvedQuestionPage extends StatelessWidget {
   final String CSTitle; // 이전 페이지 제목을 받을 변수
 
-  const RegisterPage({super.key, required this.CSTitle});
+  const SolvedQuestionPage({super.key, required this.CSTitle});
 
   @override
   Widget build(BuildContext context) {
@@ -14,7 +14,7 @@ class RegisterPage extends StatelessWidget {
       ),
       body: const Center(
         child: Text(
-          '회원가입 화면입니다.',
+          '지난 문제 둘러보기 화면입니다.',
           style: TextStyle(fontSize: 24),
         ),
       ),
