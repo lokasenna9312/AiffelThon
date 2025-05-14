@@ -60,8 +60,8 @@ class CSHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<CSHomePage> {
-  final id_input = TextEditingController();
-  final pw_input = TextEditingController();
+  final id_input = TextEditingController(text: "test");
+  final pw_input = TextEditingController(text: "1234");
 
   void _processLogin(BuildContext context) {
     String id = id_input.text;

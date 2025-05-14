@@ -1,16 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:dart_openai/dart_openai.dart';
 
-class NewExamPageTemp extends StatefulWidget {
+class PublishedExam extends StatefulWidget {
   final String CSTitle; // 이전 페이지 제목을 받을 변수
 
-  const NewExamPageTemp({super.key, required this.CSTitle});
+  const PublishedExam({super.key, required this.CSTitle});
 
   @override
   _NewExamPageTempState createState() => _NewExamPageTempState();
 }
 
-class _NewExamPageTempState extends State<NewExamPageTemp> {
+class _NewExamPageTempState extends State<PublishedExam> {
   final _formKey = GlobalKey<FormState>();
   String problemText = '';
   String answerText = '';

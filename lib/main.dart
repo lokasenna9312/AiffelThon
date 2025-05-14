@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'newexam_temporary.dart';
+import 'newexam.dart';
 import 'solvedq.dart';
 import 'community.dart';
 
@@ -25,7 +25,7 @@ class MainPage extends StatelessWidget {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => NewExamPageTemp(CSTitle: CSTitle),
+                      builder: (context) => NewExamPage(CSTitle: CSTitle),
                       // 새 문제 풀어보기 페이지를 실제로 만들게 되면 윗줄의 NewExamPageTemp를 NewExamPage로 고칩니다.
                     ),
                   );
