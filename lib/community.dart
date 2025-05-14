@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 
+import 'freebbs.dart';
+import 'qnabbs.dart';
+
 class CommunityPage extends StatelessWidget {
   final String CSTitle; // 이전 페이지 제목을 받을 변수
 
@@ -12,11 +15,33 @@ class CommunityPage extends StatelessWidget {
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
         title: Text(CSTitle), // 전달받은 제목 사용
       ),
-      body: const Center(
-        child: Text(
-          '커뮤니티 화면입니다.',
-          style: TextStyle(fontSize: 24),
-        ),
+      body: Column(
+        children: [
+          ElevatedButton(
+            onPressed: () {
+              // FreeBBSPage로 이동하면서 title 값을 전달
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => FreeBBSPage(CSTitle: CSTitle),
+                ),
+              );
+            },
+            child: Text('자유게시판'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              // QnABBSPage로 이동하면서 title 값을 전달
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => QnABBSPage(CSTitle: CSTitle),
+                ),
+              );
+            },
+            child: Text('질문게시판'),
+          ),
+        ]
       ),
     );
   }

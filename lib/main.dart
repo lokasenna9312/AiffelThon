@@ -34,7 +34,7 @@ class MainPage extends StatelessWidget {
               ),
               ElevatedButton(
                 onPressed: () {
-                  // RegisterPage로 이동하면서 title 값을 전달
+                  // SolvedQuestionPage로 이동하면서 title 값을 전달
                   Navigator.push(
                     context,
                     MaterialPageRoute(
@@ -46,7 +46,7 @@ class MainPage extends StatelessWidget {
               ),
               ElevatedButton(
                 onPressed: () {
-                  // RegisterPage로 이동하면서 title 값을 전달
+                  // CommunityPage로 이동하면서 title 값을 전달
                   Navigator.push(
                     context,
                     MaterialPageRoute(
