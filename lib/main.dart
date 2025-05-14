@@ -17,21 +17,21 @@ class MainPage extends StatelessWidget {
       ),
       body: Column(
         children: [
-          Column( // 버튼들을 세로로 배치
-            mainAxisAlignment: MainAxisAlignment.spaceAround, // 버튼 사이에 공간을 줌
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
               ElevatedButton(
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => NewExamPage(CSTitle: CSTitle),
-                      // 새 문제 풀어보기 페이지를 실제로 만들게 되면 윗줄의 NewExamPageTemp를 NewExamPage로 고칩니다.
-                    ),
-                  );
-                },
-                child: Text('새 문제 풀어보기'),
-              ),
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => NewExamPage(CSTitle: CSTitle),
+                        // 새 문제 풀어보기 페이지를 실제로 만들게 되면 윗줄의 NewExamPageTemp를 NewExamPage로 고칩니다.
+                      ),
+                    );
+                  },
+                  child: Text('새 문제 풀어보기'),
+                ),
               ElevatedButton(
                 onPressed: () {
                   // SolvedQuestionPage로 이동하면서 title 값을 전달
@@ -44,21 +44,21 @@ class MainPage extends StatelessWidget {
                 },
                 child: Text('지난 문제 둘러보기'),
               ),
-              ElevatedButton(
-                onPressed: () {
-                  // CommunityPage로 이동하면서 title 값을 전달
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => CommunityPage(CSTitle: CSTitle),
-                    ),
-                  );
-                },
-                child: Text('커뮤니티'),
-              ),
-            ],
+            ]
           ),
-        ]
+          ElevatedButton(
+            onPressed: () {
+              // CommunityPage로 이동하면서 title 값을 전달
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => CommunityPage(CSTitle: CSTitle),
+                ),
+              );
+            },
+            child: Text('커뮤니티'),
+          ),
+        ],
       ),
     );
   }

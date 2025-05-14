@@ -15,7 +15,8 @@ class CommunityPage extends StatelessWidget {
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
         title: Text(CSTitle), // 전달받은 제목 사용
       ),
-      body: Column(
+      body: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
           ElevatedButton(
             onPressed: () {

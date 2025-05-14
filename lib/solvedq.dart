@@ -17,44 +17,49 @@ class SolvedQuestionPage extends StatelessWidget {
         title: Text(CSTitle), // 전달받은 제목 사용
       ),
       body: Column(
-          children: [
-            ElevatedButton(
-              onPressed: () {
-                // AnswersPage로 이동하면서 title 값을 전달
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => AnswersPage(CSTitle: CSTitle),
-                  ),
-                );
-              },
-              child: Text('정답체크'),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                // IncorrectNotePage로 이동하면서 title 값을 전달
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => IncorrectNotePage(CSTitle: CSTitle),
-                  ),
-                );
-              },
-              child: Text('오답노트'),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                // RematchPage로 이동하면서 title 값을 전달
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => RematchPage(CSTitle: CSTitle),
-                  ),
-                );
-              },
-              child: Text('다시 풀어보기'),
-            ),
-          ]
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              ElevatedButton(
+                onPressed: () {
+                  // AnswersPage로 이동하면서 title 값을 전달
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => AnswersPage(CSTitle: CSTitle),
+                    ),
+                  );
+                },
+                child: Text('정답체크'),
+              ),
+              ElevatedButton(
+                onPressed: () {
+                  // IncorrectNotePage로 이동하면서 title 값을 전달
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => IncorrectNotePage(CSTitle: CSTitle),
+                    ),
+                  );
+                },
+                child: Text('오답노트'),
+              ),
+            ],
+          ),
+          ElevatedButton(
+            onPressed: () {
+              // RematchPage로 이동하면서 title 값을 전달
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => RematchPage(CSTitle: CSTitle),
+                ),
+              );
+            },
+            child: Text('다시 풀어보기'),
+          ),
+        ]
       ),
     );
   }
