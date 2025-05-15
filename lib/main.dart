@@ -1,16 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'dart:convert';
-import 'dart:io';
 
-import 'userdata.dart';
+import 'join.dart';
 import 'register.dart';
 import 'home.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized(); // runApp() 호출 전에 위젯 바인딩 초기화
+
+  final userDataProvider = UserDataProvider();
+  await userDataProvider.loadUsersFromJson(); // 앱 시작 시 회원 정보 로드
+
   runApp(
-    ChangeNotifierProvider(
-      create: (context) => UserDataProvider(),
+    ChangeNotifierProvider.value(
+      value: userDataProvider,
       child: const CertificateStudy(),
     ),
   );
@@ -30,6 +33,9 @@ class CertificateStudy extends StatelessWidget {
       home: const CSHomePage(title: '서술형도 한다'),
       // 이 위치의 "서술형도 한다" 가 AppBar에 출력되는 문구입니다.
       // 다른 페이지의 AppBar에선 CSTitle이라는 변수명으로 호출됩니다.
+      routes: {
+        '/register': (context) => const RegisterPage(CSTitle: '회원가입'),
+      },
     );
   }
 }
@@ -45,16 +51,16 @@ class CSHomePage extends StatefulWidget {
 
 class _CSHomePageState extends State<CSHomePage> {
 
-  final id_input = TextEditingController(text: "test");
-  final pw_input = TextEditingController(text: "1234");
+  final id_input = TextEditingController();
+  final pw_input = TextEditingController();
 
   void _processLogin(BuildContext context) {
     String id = id_input.text;
     String pw = pw_input.text;
-
     final userDataProvider = Provider.of<UserDataProvider>(context, listen: false);
-
-    if (id == 'test' && pw == '1234') {
+    print('로그인 시도 - ID: $id, PW: $pw'); // 추가
+    print('저장된 사용자 정보: ${userDataProvider.registeredUsers}');
+    if (userDataProvider.registeredUsers.containsKey(id) && userDataProvider.registeredUsers[id] == pw) {
       // 로그인 성공 시의 동작 (예: 다음 화면으로 이동)
       print('로그인 성공! ID: $id, PW: $pw');
       ScaffoldMessenger.of(context).showSnackBar(
@@ -105,15 +111,9 @@ class _CSHomePageState extends State<CSHomePage> {
               ),
               ElevatedButton(
                 onPressed: () {
-                  // RegisterPage로 이동하면서 title 값을 전달
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => RegisterPage(CSTitle: widget.title),
-                    ),
-                  );
+                  Navigator.pushNamed(context, '/register');
                 },
-                child: Text('회원가입'),
+                child: const Text('회원가입'),
               ),
             ],
           ),
