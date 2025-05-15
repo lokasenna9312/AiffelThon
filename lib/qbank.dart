@@ -18,7 +18,7 @@ class _NewExamPageTempState extends State<QuestionBank> {
 
   Future<void> evaluateAnswer() async {
     /* OpenAI API 키 설정(실제 환경에서는 안전하게 관리 필요) */
-    OpenAI.apiKey = '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';
+    OpenAI.apiKey = '';
 
     /* API 호출 */
     var response = await OpenAI.instance.completion.create(

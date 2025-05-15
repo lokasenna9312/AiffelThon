@@ -1,12 +1,19 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'dart:convert';
 import 'dart:io';
 
-import 'login.dart';
+import 'userdata.dart';
 import 'register.dart';
 import 'home.dart';
 
 void main() {
-  runApp(const CertificateStudy());
+  runApp(
+    ChangeNotifierProvider(
+      create: (context) => UserDataProvider(),
+      child: const CertificateStudy(),
+    ),
+  );
 }
 
 class CertificateStudy extends StatelessWidget {
@@ -22,7 +29,7 @@ class CertificateStudy extends StatelessWidget {
       ),
       home: const CSHomePage(title: '서술형도 한다'),
       // 이 위치의 "서술형도 한다" 가 AppBar에 출력되는 문구입니다.
-      // 다른 페이지의 AppBar에선 CSTitle이라는 이름으로 호출됩니다.
+      // 다른 페이지의 AppBar에선 CSTitle이라는 변수명으로 호출됩니다.
     );
   }
 }
@@ -33,10 +40,10 @@ class CSHomePage extends StatefulWidget {
   final String title;
 
   @override
-  State<CSHomePage> createState() => _MyHomePageState();
+  State<CSHomePage> createState() => _CSHomePageState();
 }
 
-class _MyHomePageState extends State<CSHomePage> {
+class _CSHomePageState extends State<CSHomePage> {
 
   final id_input = TextEditingController(text: "test");
   final pw_input = TextEditingController(text: "1234");
@@ -45,7 +52,9 @@ class _MyHomePageState extends State<CSHomePage> {
     String id = id_input.text;
     String pw = pw_input.text;
 
-    if (attemptLogin(id, pw)) {
+    final userDataProvider = Provider.of<UserDataProvider>(context, listen: false);
+
+    if (id == 'test' && pw == '1234') {
       // 로그인 성공 시의 동작 (예: 다음 화면으로 이동)
       print('로그인 성공! ID: $id, PW: $pw');
       ScaffoldMessenger.of(context).showSnackBar(
