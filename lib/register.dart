@@ -14,17 +14,23 @@ class RegisterPage extends StatefulWidget {
 class _RegisterPageState extends State<RegisterPage> {
   final _newID = TextEditingController();
   final _newPW = TextEditingController();
+  final _newPW2 = TextEditingController();
 
   void _registerUser(BuildContext context) {
     final userDataProvider = Provider.of<UserDataProvider>(context, listen: false);
     final String newID = _newID.text.trim();
     final String newPW = _newPW.text.trim();
+    final String newPW2 = _newPW2.text.trim();
 
-    if (newID.isNotEmpty && newPW.isNotEmpty && !userDataProvider.isUserRegistered(newID)) {
+    if (newID.isNotEmpty && newPW.isNotEmpty && newPW2.isNotEmpty && newPW == newPW2 && !userDataProvider.isUserRegistered(newID)) {
       userDataProvider.addUser(newID, newPW);
       Navigator.pop(context); // 회원가입 완료 후 이전 화면으로 이동
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('회원가입이 완료되었습니다.')),
+      );
+    } else if (newPW != newPW2) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('비밀번호가 맞지 않습니다.')),
       );
     } else if (userDataProvider.isUserRegistered(newID)) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -48,14 +54,18 @@ class _RegisterPageState extends State<RegisterPage> {
         children: [
           TextField(
             controller: _newID,
-            decoration: const InputDecoration(labelText: '새로운 ID'),
+            decoration: const InputDecoration(labelText: 'ID'),
           ),
           TextField(
             controller: _newPW,
             obscureText: true,
-            decoration: const InputDecoration(labelText: '새로운 비밀번호'),
+            decoration: const InputDecoration(labelText: '비밀번호'),
           ),
-          const SizedBox(height: 20),
+          TextField(
+            controller: _newPW2,
+            obscureText: true,
+            decoration: const InputDecoration(labelText: '비밀번호 확인'),
+          ),
           ElevatedButton(
             onPressed: () => _registerUser(context),
             child: const Text('회원가입'),

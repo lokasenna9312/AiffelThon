@@ -111,9 +111,14 @@ class _CSHomePageState extends State<CSHomePage> {
               ),
               ElevatedButton(
                 onPressed: () {
-                  Navigator.pushNamed(context, '/register');
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => RegisterPage(CSTitle: widget.title),
+                    ),
+                  );
                 },
-                child: const Text('회원가입'),
+                child: Text('회원가입'),
               ),
             ],
           ),
