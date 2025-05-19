@@ -129,7 +129,7 @@ class _CSHomePageState extends State<CSHomePage> {
                     ),
                   );
                 },
-                child: Text('ID가 없으신가요?'),
+                child: Text('게정 만들기 / 찾기'),
               ),
             ],
           ),

@@ -113,6 +113,7 @@ class _LostIDPageState extends State<LostIDPage> {
           ),
           Text("ID 찾기는 E메일만 입력하시고 누르시면 됩니다.\n비밀번호 변경은 아래의 모든 칸을 채우고 눌러주세요."),
           Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround, // 버튼 사이에 공간을 줌
             children: [
               ElevatedButton(
                 onPressed: _findID,
