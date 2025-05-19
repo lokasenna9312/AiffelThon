@@ -5,8 +5,10 @@ import 'community.dart';
 
 class MainPage extends StatelessWidget {
   final String CSTitle; // 이전 페이지 제목을 받을 변수
+  final String id;
+  final String email;
 
-  const MainPage({super.key, required this.CSTitle});
+  const MainPage({super.key, required this.CSTitle, required this.id, required this.email});
 
   @override
   Widget build(BuildContext context) {
@@ -17,6 +19,8 @@ class MainPage extends StatelessWidget {
       ),
       body: Column(
         children: [
+          Text("ID : $id"),
+          Text("E메일 : $email"),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [

@@ -61,14 +61,15 @@ class _CSHomePageState extends State<CSHomePage> {
     final userDataProvider = Provider.of<UserDataProvider>(context, listen: false);
     if (userDataProvider.registeredUsers.containsKey(id)) {
       String? storedHashedPassword = userDataProvider.registeredUsers[id]?["password"];
-      if (storedHashedPassword != null && BCrypt.checkpw(pw, storedHashedPassword)) {
+      String? email = userDataProvider.registeredUsers[id]?["email"];
+      if (storedHashedPassword != null && BCrypt.checkpw(pw, storedHashedPassword) && email != null) {
         // 로그인 성공 시의 동작 (예: 다음 화면으로 이동)
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('로그인 성공!')),
         );
         Navigator.push(
           context,
-          MaterialPageRoute(builder: (context) => MainPage(CSTitle: widget.title)),
+          MaterialPageRoute(builder: (context) => MainPage(CSTitle: widget.title, id: id, email:email)),
         );
       } else if (storedHashedPassword != null && !BCrypt.checkpw(pw, storedHashedPassword)) {
         // 비밀번호 불일치 시의 동작
@@ -128,12 +129,12 @@ class _CSHomePageState extends State<CSHomePage> {
                     ),
                   );
                 },
-                child: Text('회원가입'),
+                child: Text('ID가 없으신가요?'),
               ),
             ],
           ),
         ]
-      ), // This trailing comma makes auto-formatting nicer for build methods.
+      ), // This trailing comma makes auto-formatting ㅅnicer for build methods.
     );
   }
 }
