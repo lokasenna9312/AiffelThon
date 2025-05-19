@@ -8,6 +8,10 @@ import 'package:bcrypt/bcrypt.dart';
 class UserDataProvider extends ChangeNotifier {
   Map<String, Map> _registeredUsers = {};
   Map<String, Map> get registeredUsers => _registeredUsers;
+  Future<File> _getUserDataFile() async {
+    final directory = await getApplicationDocumentsDirectory();
+    return File('${directory.path}/users.json');
+  }
 
   void addUser(String id, String pw) async {
     _registeredUsers[id] = {"password" : pw};
@@ -23,8 +27,7 @@ class UserDataProvider extends ChangeNotifier {
   Future<void> saveUsersToJson() async {
     try {
       // 앱 내부 문서 디렉토리 경로 가져오기
-      final directory = await getApplicationDocumentsDirectory();
-      final file = File('${directory.path}/users.json');
+      final file = await _getUserDataFile();
 
       // Map을 JSON 문자열로 변환
       String jsonString = jsonEncode(_registeredUsers);
@@ -37,11 +40,10 @@ class UserDataProvider extends ChangeNotifier {
     }
   }
 
-  // JSON 파일에서 회원 정보를 로드하는 메소드 (추가적으로 구현할 수 있습니다.)
+  // JSON 파일에서 회원 정보를 로드하는 메소드
   Future<void> loadUsersFromJson() async {
     try {
-      final directory = await getApplicationDocumentsDirectory();
-      final file = File('${directory.path}/users.json');
+      final file = await _getUserDataFile();
       if (await file.exists()) {
         String jsonString = await file.readAsString();
         Map<String, dynamic> parsedJson = jsonDecode(jsonString);
