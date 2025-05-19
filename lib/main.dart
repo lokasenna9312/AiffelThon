@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:bcrypt/bcrypt.dart';
 
-import 'join.dart';
 import 'register.dart';
 import 'home.dart';
 
@@ -57,24 +57,34 @@ class _CSHomePageState extends State<CSHomePage> {
   void _processLogin(BuildContext context) {
     String id = id_input.text;
     String pw = pw_input.text;
+
     final userDataProvider = Provider.of<UserDataProvider>(context, listen: false);
-    print('로그인 시도 - ID: $id, PW: $pw'); // 추가
-    print('저장된 사용자 정보: ${userDataProvider.registeredUsers}');
-    if (userDataProvider.registeredUsers.containsKey(id) && userDataProvider.registeredUsers[id] == pw) {
-      // 로그인 성공 시의 동작 (예: 다음 화면으로 이동)
-      print('로그인 성공! ID: $id, PW: $pw');
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('로그인 성공!')),
-      );
-      Navigator.push(
-        context,
-        MaterialPageRoute(builder: (context) => MainPage(CSTitle: widget.title)),
-      );
+    if (userDataProvider.registeredUsers.containsKey(id)) {
+      String? storedHashedPassword = userDataProvider.registeredUsers[id]?["password"];
+      if (storedHashedPassword != null && BCrypt.checkpw(pw, storedHashedPassword)) {
+        // 로그인 성공 시의 동작 (예: 다음 화면으로 이동)
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('로그인 성공!')),
+        );
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => MainPage(CSTitle: widget.title)),
+        );
+      } else if (storedHashedPassword != null && !BCrypt.checkpw(pw, storedHashedPassword)) {
+        // 비밀번호 불일치 시의 동작
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('로그인 실패. 비밀번호를 확인하세요.')),
+        );
+      } else {
+        // storedHashedPassword가 null인 경우 (ID는 존재하지만 비밀번호 정보가 없는 경우)
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('비밀번호를 재설정해주세요.')),
+        );
+      }
     } else {
-      // 로그인 실패 시의 동작 (예: 오류 메시지 표시)
-      print('로그인 실패...');
+      // ID가 존재하지 않는 경우
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('로그인 실패. ID 또는 비밀번호를 확인하세요.')),
+        SnackBar(content: Text('존재하지 않는 ID입니다.')),
       );
     }
   }
