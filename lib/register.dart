@@ -9,6 +9,10 @@ import 'lostid.dart';
 
 class UserDataProvider extends ChangeNotifier {
   Map<String, Map> _registeredUsers = {};
+  /* 아래 Map객체는 외부에서는 _registeredUsers에 직접 접근할 수 없고,
+  오직 registeredUsers를 통해서만 접근할 수 있게 됨, 캡슐화 원칙을 따르는 방법으로
+  데이터 무결성을 유지하고, 객체 내부의 구현을 감추는데 유용함.
+   */
   Map<String, Map> get registeredUsers => _registeredUsers;
   Future<File> _getUserDataFile() async {
     final directory = await getApplicationDocumentsDirectory();
@@ -24,7 +28,6 @@ class UserDataProvider extends ChangeNotifier {
   bool isUserRegistered(String id) {
     return _registeredUsers.containsKey(id);
   }
-
   bool isEmailEnlisted(String email) {
     for (var userEntry in _registeredUsers.values) {
       if (userEntry.containsKey("email") && userEntry["email"] == email) {
@@ -55,6 +58,11 @@ class UserDataProvider extends ChangeNotifier {
   }
 
   // registeredUsers 맵을 JSON 파일로 저장하는 메소드
+  /* 비동기 처리는 파일 쓰기 작업과 같은 I/O작업을 별도의 스레드에서
+  실행하여 메인 스레드의 작업을 방해하지 않도록 함으로써, 앱의 UI가 멈추지 않고
+  부드럽게 유지되도록 함, 이는 사용자 경험을 크게 향상시키며, 복잡한 동기화 문제를
+  피할 수 있게 해줌.
+   */
   Future<void> saveUsersToJson() async {
     try {
       // 앱 내부 문서 디렉토리 경로 가져오기
