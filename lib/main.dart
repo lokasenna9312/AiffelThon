@@ -68,13 +68,14 @@ class _CSHomePageState extends State<CSHomePage> {
       String? storedHashedPassword = userDataProvider.registeredUsers[id]?["password"];
       String? email = userDataProvider.registeredUsers[id]?["email"];
       if (storedHashedPassword != null && BCrypt.checkpw(pw, storedHashedPassword) && email != null) {
-        // 로그인 성공 시의 동작 (예: 다음 화면으로 이동)
+        // 로그인 성공 시의 동작
+        userDataProvider.loginUser(id, email); // 로그인 상태 업데이트
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('로그인 성공!')),
         );
-        Navigator.push(
+        Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (context) => MainPage(CSTitle: CSTitle, id: id, email:email)),
+          MaterialPageRoute(builder: (context) => MainPage(CSTitle: CSTitle)),
         );
       } else if (storedHashedPassword != null && !BCrypt.checkpw(pw, storedHashedPassword)) {
         // 비밀번호 불일치 시의 동작
@@ -131,7 +132,7 @@ class _CSHomePageState extends State<CSHomePage> {
                     ),
                   );
                 },
-                child: Text('게정 만들기 / 찾기'),
+                child: Text('계정 만들기 / 찾기'),
               ),
             ],
           ),

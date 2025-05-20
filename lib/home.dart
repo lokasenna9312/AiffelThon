@@ -1,19 +1,23 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 import 'newexam.dart';
 import 'solvedq.dart';
 import 'community.dart';
 import 'appbar.dart';
+import 'register.dart';
 
 class MainPage extends StatelessWidget {
   final String CSTitle; // 이전 페이지 제목을 받을 변수
-  final String id;
-  final String email;
 
-  const MainPage({super.key, required this.CSTitle, required this.id, required this.email});
+  const MainPage({super.key, required this.CSTitle});
 
   @override
   Widget build(BuildContext context) {
+    final userDataProvider = Provider.of<UserDataProvider>(context);
+    final String? id = userDataProvider.loggedInUserId;
+    final String? email = userDataProvider.loggedInUserEmail;
+
     return Scaffold(
       appBar: CSAppBar(title: CSTitle),
       body: Column(
@@ -29,7 +33,6 @@ class MainPage extends StatelessWidget {
                       context,
                       MaterialPageRoute(
                         builder: (context) => NewExamPage(CSTitle: CSTitle),
-                        // 새 문제 풀어보기 페이지를 실제로 만들게 되면 윗줄의 NewExamPageTemp를 NewExamPage로 고칩니다.
                       ),
                     );
                   },

@@ -96,6 +96,28 @@ class UserDataProvider extends ChangeNotifier {
       print('회원 정보 로드 중 오류 발생: $e');
     }
   }
+
+  bool _isLoggedIn = false; // 로그인 상태 관리
+  String? _loggedInUserId;
+  String? _loggedInUserEmail;
+
+  bool get isLoggedIn => _isLoggedIn;
+  String? get loggedInUserId => _loggedInUserId;
+  String? get loggedInUserEmail => _loggedInUserEmail;
+
+  void loginUser(String id, String email) {
+    _isLoggedIn = true;
+    _loggedInUserId = id;
+    _loggedInUserEmail = email;
+    notifyListeners();
+  }
+
+  void logoutUser() {
+    _isLoggedIn = false;
+    _loggedInUserId = null;
+    _loggedInUserEmail = null;
+    notifyListeners();
+  }
 }
 
 class RegisterPage extends StatefulWidget {
