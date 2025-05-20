@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import 'appbar.dart';
+
 class RematchPage extends StatelessWidget {
   final String CSTitle; // 이전 페이지 제목을 받을 변수
 
@@ -8,10 +10,7 @@ class RematchPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        title: Text(CSTitle), // 전달받은 제목 사용
-      ),
+      appBar: CSAppBar(title: CSTitle),
       body: const Center(
         child: Text(
           '다시 풀어보기 화면입니다.',

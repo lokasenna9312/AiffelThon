@@ -4,6 +4,7 @@ import 'package:bcrypt/bcrypt.dart';
 
 import 'register.dart';
 import 'home.dart';
+import 'appbar.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized(); // runApp() 호출 전에 위젯 바인딩 초기화
@@ -30,29 +31,33 @@ class CertificateStudy extends StatelessWidget {
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
       ),
-      home: const CSHomePage(title: '서술형도 한다'),
+      home: const CSHomePage(CSTitle: '서술형도 한다'),
       // 이 위치의 "서술형도 한다" 가 AppBar에 출력되는 문구입니다.
       // 다른 페이지의 AppBar에선 CSTitle이라는 변수명으로 호출됩니다.
-      routes: {
-        '/register': (context) => const RegisterPage(CSTitle: '회원가입'),
-      },
     );
   }
 }
 
 class CSHomePage extends StatefulWidget {
-  const CSHomePage({super.key, required this.title});
+  final String CSTitle;
 
-  final String title;
+  const CSHomePage({super.key, required this.CSTitle});
 
   @override
   State<CSHomePage> createState() => _CSHomePageState();
 }
 
 class _CSHomePageState extends State<CSHomePage> {
-
   final id_input = TextEditingController();
   final pw_input = TextEditingController();
+
+  late String CSTitle; // CSTitle 변수 선언
+
+  @override
+  void initState() {
+    super.initState();
+    CSTitle = widget.CSTitle;
+  }
 
   void _processLogin(BuildContext context) {
     String id = id_input.text;
@@ -69,7 +74,7 @@ class _CSHomePageState extends State<CSHomePage> {
         );
         Navigator.push(
           context,
-          MaterialPageRoute(builder: (context) => MainPage(CSTitle: widget.title, id: id, email:email)),
+          MaterialPageRoute(builder: (context) => MainPage(CSTitle: CSTitle, id: id, email:email)),
         );
       } else if (storedHashedPassword != null && !BCrypt.checkpw(pw, storedHashedPassword)) {
         // 비밀번호 불일치 시의 동작
@@ -93,10 +98,7 @@ class _CSHomePageState extends State<CSHomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        title: Text(widget.title),
-      ),
+      appBar: CSAppBar(title: CSTitle),
       body: Column(
         children: [
           Image(image: AssetImage('assets/images/logo.png')),
@@ -125,7 +127,7 @@ class _CSHomePageState extends State<CSHomePage> {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => RegisterPage(CSTitle: widget.title),
+                      builder: (context) => RegisterPage(CSTitle: CSTitle),
                     ),
                   );
                 },
@@ -134,7 +136,7 @@ class _CSHomePageState extends State<CSHomePage> {
             ],
           ),
         ]
-      ), // This trailing comma makes auto-formatting ㅅnicer for build methods.
+      ), // This trailing comma makes auto-formatting nicer for build methods.
     );
   }
 }

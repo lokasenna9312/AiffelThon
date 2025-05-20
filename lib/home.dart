@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+
 import 'newexam.dart';
 import 'solvedq.dart';
 import 'community.dart';
+import 'appbar.dart';
 
 class MainPage extends StatelessWidget {
   final String CSTitle; // 이전 페이지 제목을 받을 변수
@@ -13,10 +15,7 @@ class MainPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        title: Text(CSTitle), // 전달받은 제목 사용
-      ),
+      appBar: CSAppBar(title: CSTitle),
       body: Column(
         children: [
           Text("ID : $id"),

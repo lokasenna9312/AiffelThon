@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:dart_openai/dart_openai.dart';
 
+import 'appbar.dart';
+
 class PublishedExam extends StatefulWidget {
   final String CSTitle; // 이전 페이지 제목을 받을 변수
 
@@ -11,6 +13,14 @@ class PublishedExam extends StatefulWidget {
 }
 
 class _NewExamPageTempState extends State<PublishedExam> {
+  late String CSTitle; // CSTitle 변수 선언
+
+  @override
+  void initState() {
+    super.initState();
+    CSTitle = widget.CSTitle;
+  }
+
   final _formKey = GlobalKey<FormState>();
   String problemText = '';
   String answerText = '';
@@ -35,7 +45,7 @@ class _NewExamPageTempState extends State<PublishedExam> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text(widget.CSTitle)),
+      appBar: CSAppBar(title: CSTitle),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Form(

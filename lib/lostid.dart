@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:bcrypt/bcrypt.dart';
 
 import 'register.dart';
+import 'appbar.dart';
 
 class LostIDPage extends StatefulWidget {
   const LostIDPage({super.key, required this.CSTitle});
@@ -20,6 +21,14 @@ class _LostIDPageState extends State<LostIDPage> {
   final _wantedPW = TextEditingController();
   final _wantedPW2 = TextEditingController();
   String? _foundID;
+
+  late String CSTitle; // CSTitle 변수 선언
+
+  @override
+  void initState() {
+    super.initState();
+    CSTitle = widget.CSTitle;
+  }
 
   void _findID() {
     final userDataProvider = Provider.of<UserDataProvider>(context, listen: false);
@@ -87,10 +96,7 @@ class _LostIDPageState extends State<LostIDPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        title: Text(widget.CSTitle),
-      ),
+      appBar: CSAppBar(title: CSTitle),
       body: Column(
         children: [
           TextField(

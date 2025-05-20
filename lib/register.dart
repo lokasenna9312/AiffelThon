@@ -6,6 +6,7 @@ import 'dart:io';
 import 'package:bcrypt/bcrypt.dart';
 
 import 'lostid.dart';
+import 'appbar.dart';
 
 class UserDataProvider extends ChangeNotifier {
   Map<String, Map> _registeredUsers = {};
@@ -112,6 +113,14 @@ class _RegisterPageState extends State<RegisterPage> {
   final _newPW2 = TextEditingController();
   final _email = TextEditingController();
 
+  late String CSTitle; // CSTitle 변수 선언
+
+  @override
+  void initState() {
+    super.initState();
+    CSTitle = widget.CSTitle;
+  }
+
   void _registerUser(BuildContext context) {
     final userDataProvider = Provider.of<UserDataProvider>(context, listen: false);
     final String newID = _newID.text.trim();
@@ -160,10 +169,7 @@ class _RegisterPageState extends State<RegisterPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        title: Text(widget.CSTitle),
-      ),
+      appBar: CSAppBar(title: CSTitle),
       body: Column(
         children: [
           TextField(

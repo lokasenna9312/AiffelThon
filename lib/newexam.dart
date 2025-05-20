@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'publishedexam.dart';
 import 'qbank.dart';
+import 'appbar.dart';
 
 class NewExamPage extends StatelessWidget {
   final String CSTitle; // 이전 페이지 제목을 받을 변수
@@ -11,10 +12,7 @@ class NewExamPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        title: Text(CSTitle), // 전달받은 제목 사용
-      ),
+      appBar: CSAppBar(title: CSTitle),
       body: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
