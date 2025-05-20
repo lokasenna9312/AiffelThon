@@ -6,7 +6,6 @@ import 'solvedq.dart';
 import 'community.dart';
 import 'appbar.dart';
 import 'register.dart';
-import 'deleteaccount.dart';
 
 class MainPage extends StatelessWidget {
   final String CSTitle; // 이전 페이지 제목을 받을 변수
