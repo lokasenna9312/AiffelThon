@@ -5,7 +5,6 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:bcrypt/bcrypt.dart';
 
-import 'lostid.dart';
 import 'appbar.dart';
 
 class UserDataProvider extends ChangeNotifier {
@@ -21,7 +20,7 @@ class UserDataProvider extends ChangeNotifier {
   }
 
   void addUser(String id, String pw, String email) async {
-    _registeredUsers[id] = {"password" : pw, "email" : email};
+    _registeredUsers[id] = {"pw" : pw, "email" : email};
     await saveUsersToJson();
     notifyListeners();
   }
@@ -47,9 +46,9 @@ class UserDataProvider extends ChangeNotifier {
     return null;
   }
 
-  void changePassword(String id, String email, String hashedwantedPW) {
+  void changePW(String id, String email, String hashedwantedPW) {
     if (isUserRegistered(id) && isEmailEnlisted(email)) {
-      _registeredUsers[id]?["password"] = hashedwantedPW;
+      _registeredUsers[id]?["pw"] = hashedwantedPW;
       saveUsersToJson();
       notifyListeners();
     } else {
@@ -118,6 +117,25 @@ class UserDataProvider extends ChangeNotifier {
     _loggedInUserEmail = null;
     notifyListeners();
   }
+
+  Future<bool> deleteUser(String id, String email, String pw) async {
+    if (_registeredUsers.containsKey(id)) {
+      final idToDelete = _registeredUsers[id];
+      final emailToDelete = idToDelete?["email"];
+      final hashedPWToDelete = idToDelete?["pw"];
+
+      if (emailToDelete == email && hashedPWToDelete != null && BCrypt.checkpw(pw, hashedPWToDelete)) {
+        _registeredUsers.remove(id);
+        await saveUsersToJson();
+        notifyListeners();
+        return true; // 회원 탈퇴 성공
+      } else {
+        return false; // 이메일 또는 비밀번호 불일치
+      }
+    } else {
+      return false; // 해당 ID의 사용자 없음
+    }
+  }
 }
 
 class RegisterPage extends StatefulWidget {
@@ -130,6 +148,7 @@ class RegisterPage extends StatefulWidget {
 }
 
 class _RegisterPageState extends State<RegisterPage> {
+  late UserDataProvider userDataProvider;
   final _newID = TextEditingController();
   final _newPW = TextEditingController();
   final _newPW2 = TextEditingController();
@@ -141,10 +160,10 @@ class _RegisterPageState extends State<RegisterPage> {
   void initState() {
     super.initState();
     CSTitle = widget.CSTitle;
+    userDataProvider = Provider.of<UserDataProvider>(context, listen: false);
   }
 
   void _registerUser(BuildContext context) {
-    final userDataProvider = Provider.of<UserDataProvider>(context, listen: false);
     final String newID = _newID.text.trim();
     final String newPW = _newPW.text.trim();
     final String newPW2 = _newPW2.text.trim();
@@ -188,6 +207,67 @@ class _RegisterPageState extends State<RegisterPage> {
     }
   }
 
+  void _findID() {
+    final id = userDataProvider.findIdByEmail(_email.text.trim());
+    String? _foundID;
+    setState(() {
+      _foundID = id;
+    });
+    if (_foundID != null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('찾으신 ID: $_foundID')),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('해당 E메일로 가입된 회원은 없습니다.')),
+      );
+    }
+  }
+
+  void _changePW() {
+    final String newID = _newID.text.trim();
+    final String newPW = _newPW.text.trim();
+    final String newPW2 = _newPW2.text.trim();
+    final String email = _email.text.trim();
+    if (newID.isNotEmpty && email.isNotEmpty && newPW.isNotEmpty && newPW2.isNotEmpty && userDataProvider.isUserRegistered(newID) && userDataProvider.isEmailEnlisted(email)) {
+      if (newPW == newPW2) {
+        String hashedwantedPW = BCrypt.hashpw(newPW, BCrypt.gensalt());
+        userDataProvider.changePW(newID, email, hashedwantedPW);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('비밀번호가 변경되었습니다.')),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('비밀번호가 맞지 않습니다.')),
+        );
+      }
+    } else if (newID.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('ID를 입력하지 않았습니다.')),
+      );
+    } else if (!userDataProvider.isUserRegistered(newID)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('해당 ID로 가입한 회원은 없습니다.')),
+      );
+    } else if (email.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('E메일을 입력하지 않았습니다.')),
+      );
+    } else if (!userDataProvider.isEmailEnlisted(email)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('해당 E메일로 가입한 회원은 없습니다.')),
+      );
+    } else if (newPW.isEmpty || newPW2.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('비밀번호를 입력하지 않았습니다.')),
+      );
+    } else if (newPW != newPW2) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('비밀번호가 맞지 않습니다.')),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -212,24 +292,21 @@ class _RegisterPageState extends State<RegisterPage> {
             controller: _email,
             decoration: const InputDecoration(labelText: 'E-mail'),
           ),
+          Text("ID 찾기는 E메일만 입력하시면 됩니다.\n회원가입과 비밀번호 재설정은 위 입력칸을 모두 입력하십시오."),
+          ElevatedButton(
+            onPressed: () => _registerUser(context),
+            child: Text('회원가입'),
+          ),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround, // 버튼 사이에 공간을 줌
             children: [
               ElevatedButton(
-                onPressed: () => _registerUser(context),
-                child: const Text('회원가입'),
+                onPressed: () => _findID(),
+                child: Text('ID 찾기'),
               ),
               ElevatedButton(
-                onPressed: () {
-                  // LostIDPage로 이동하면서 title 값을 전달
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => LostIDPage(CSTitle: widget.CSTitle),
-                    ),
-                  );
-                },
-                child: Text('ID, PW 찾기'),
+                onPressed: () => _changePW(),
+                child: Text('비밀번호 재설정'),
               ),
             ]
           )

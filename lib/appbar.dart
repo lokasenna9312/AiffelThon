@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import 'register.dart';
 import 'main.dart';
+import 'deleteaccount.dart';
 
 
 class CSAppBar extends StatelessWidget implements PreferredSizeWidget {
@@ -32,6 +33,17 @@ class CSAppBar extends StatelessWidget implements PreferredSizeWidget {
               ),
             );
           }
+        ),
+        ElevatedButton(
+            child: Text('탈퇴'),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => WithdrawPage(CSTitle: title),
+                ),
+              );
+            }
         ),
       ],
     );

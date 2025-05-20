@@ -65,7 +65,7 @@ class _CSHomePageState extends State<CSHomePage> {
 
     final userDataProvider = Provider.of<UserDataProvider>(context, listen: false);
     if (userDataProvider.registeredUsers.containsKey(id)) {
-      String? storedHashedPassword = userDataProvider.registeredUsers[id]?["password"];
+      String? storedHashedPassword = userDataProvider.registeredUsers[id]?["pw"];
       String? email = userDataProvider.registeredUsers[id]?["email"];
       if (storedHashedPassword != null && BCrypt.checkpw(pw, storedHashedPassword) && email != null) {
         // 로그인 성공 시의 동작

@@ -22,8 +22,7 @@ class MainPage extends StatelessWidget {
       appBar: CSAppBar(title: CSTitle),
       body: Column(
         children: [
-          Text("ID : $id"),
-          Text("E메일 : $email"),
+          Text("ID : $id\nE메일 : $email"),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
