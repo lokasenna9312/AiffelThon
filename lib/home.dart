@@ -20,16 +20,16 @@ class MainPage extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
               ElevatedButton(
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => NewExamPage(CSTitle: CSTitle),
-                      ),
-                    );
-                  },
-                  child: Text('새 문제 풀어보기'),
-                ),
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => NewExamPage(CSTitle: CSTitle),
+                    ),
+                  );
+                },
+                child: Text('새 문제 풀어보기'),
+              ),
               ElevatedButton(
                 onPressed: () {
                   // SolvedQuestionPage로 이동하면서 title 값을 전달
