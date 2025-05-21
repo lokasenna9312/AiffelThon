@@ -71,7 +71,6 @@ class _DeleteAccountPageState extends State<DeleteAccountPage> {
             decoration: const InputDecoration(labelText: '비밀번호'),
           ),
           TextField(controller: _email, decoration: const InputDecoration(labelText: 'E-mail')),
-          Text("회원 탈퇴를 위해서는 ID와 E메일, 비밀번호를 모두 입력하셔야 합니다."),
           ElevatedButton(
             onPressed: () => _DeleteAccountAccount(context),
             child: const Text('회원 탈퇴'),
