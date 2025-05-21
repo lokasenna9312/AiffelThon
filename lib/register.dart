@@ -5,7 +5,7 @@ import 'package:bcrypt/bcrypt.dart';
 import 'appbar.dart';
 import 'UserDataProvider.dart';
 import 'ui_utils.dart';
-import 'main.dart';
+import 'changepw.dart';
 
 class RegisterPage extends StatefulWidget {
   const RegisterPage({super.key, required this.CSTitle});
@@ -75,48 +75,6 @@ class _RegisterPageState extends State<RegisterPage> {
     }
   }
 
-  // _changePW() 함수는 modifyaccount.dart 파일에도 똑같이 정의되어 있습니다.
-  // 이 함수를 수정하시려면 modifyaccount.dart 파일의 함수도 똑같이 수정해주세요.
-  void _changePW() async {
-    final String newID = _newID.text.trim();
-    final String newPW = _newPW.text.trim();
-    final String newPW2 = _newPW2.text.trim();
-    final String newEmail = _newEmail.text.trim();
-
-    final ValidationResult result = await utility.ValidateAndChangePW(
-      newID: newID,
-      newPW: newPW,
-      newPW2: newPW2,
-      newEmail: newEmail,
-      userDataProvider: userDataProvider,
-    );
-
-    if (!result.isSuccess) {
-      showSnackBarMessage(context, result.message);
-      return;
-    }
-
-    final String hashedPassword = result.message;
-
-    userDataProvider.changePW(newID, newEmail, hashedPassword);
-    showSnackBarMessage(context, '비밀번호가 성공적으로 변경되었습니다.');
-
-    // 비밀번호 변경 후에는 기존 세션을 무효화하고 로그아웃 처리
-    userDataProvider.logoutUser(); // UserDataProvider의 logoutUser 메소드 호출
-
-    // 로그인 페이지 또는 앱의 초기 화면으로 이동
-    Navigator.pushAndRemoveUntil( // 현재 스택의 모든 위젯을 제거하고 새 위젯으로 대체
-      context,
-      MaterialPageRoute(builder: (context) => CSHomePage(CSTitle: CSTitle)), // 가정된 로그인 페이지
-      (Route<dynamic> route) => false, // 모든 이전 라우트 제거
-    );
-
-    _newID.clear();
-    _newPW.clear();
-    _newPW2.clear();
-    _newEmail.clear();
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -141,7 +99,7 @@ class _RegisterPageState extends State<RegisterPage> {
             controller: _newEmail,
             decoration: const InputDecoration(labelText: 'E-mail'),
           ),
-          Text("ID 찾기는 E메일만 입력하시면 됩니다.\n회원가입과 비밀번호 재설정은 위 입력칸을 모두 입력하십시오."),
+          Text("ID 찾기는 E메일만 입력하시면 됩니다."),
           ElevatedButton(
             onPressed: () => _registerUser(),
             child: Text('회원가입'),
@@ -154,7 +112,14 @@ class _RegisterPageState extends State<RegisterPage> {
                 child: Text('ID 찾기'),
               ),
               ElevatedButton(
-                onPressed: () => _changePW(),
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => ChangePWPage(CSTitle: CSTitle),
+                    ),
+                  );
+                },
                 child: Text('비밀번호 재설정'),
               ),
             ]

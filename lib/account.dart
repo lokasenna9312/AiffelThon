@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+
 import 'modifyaccount.dart';
 import 'appbar.dart';
 import 'deleteaccount.dart';
 import 'UserDataProvider.dart';
+
 
 class AccountInfoPage extends StatefulWidget {
   final String CSTitle;

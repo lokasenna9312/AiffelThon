@@ -152,11 +152,11 @@ class UserDataProvider extends ChangeNotifier {
 
 class ValidationResult {
   final bool isSuccess;
-  final String message; // 성공 시 해싱된 비밀번호, 실패 시 에러 메시지
+  final String message;
 
-  ValidationResult.success(String hashedPassword)
+  ValidationResult.success(String validatedResult)
       : isSuccess = true,
-        message = hashedPassword;
+        message = validatedResult;
 
   ValidationResult.failure(String errorMessage)
       : isSuccess = false,
@@ -195,6 +195,8 @@ class UserDataProviderUtility {
     // 모든 유효성 검사를 통과했다면, 비밀번호를 해싱하여 반환합니다.
     String hashedPassword = BCrypt.hashpw(newPW, BCrypt.gensalt());
     return ValidationResult.success(hashedPassword); // 성공 시 해싱된 비밀번호 반환
+
+    // 실제 비밀번호 변경 작업은 이 파일의 UserDataProvider.changePW 파일에서 이뤄집니다.
   }
 
   Future<ValidationResult> ValidateAndChangeEmail({
@@ -231,5 +233,7 @@ class UserDataProviderUtility {
     }
 
     return ValidationResult.success('유효성 검사 성공');
+
+    // 실제 E메일 주소 변경 작업은 이 파일의 UserDataProvider.changeEmail 파일에서 이뤄집니다.
   }
 }
