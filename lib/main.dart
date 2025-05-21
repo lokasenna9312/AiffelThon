@@ -6,6 +6,7 @@ import 'register.dart';
 import 'home.dart';
 import 'appbar.dart';
 import 'UserDataProvider.dart';
+import 'ui_utils.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized(); // runApp() 호출 전에 위젯 바인딩 초기화
@@ -71,29 +72,24 @@ class _CSHomePageState extends State<CSHomePage> {
       if (storedHashedPassword != null && BCrypt.checkpw(pw, storedHashedPassword) && email != null) {
         // 로그인 성공 시의 동작
         userDataProvider.loginUser(id, email); // 로그인 상태 업데이트
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('로그인 성공!')),
-        );
-        Navigator.pushReplacement(
+        showSnackBarMessage(context, '로그인 성공!');
+        Navigator.pushAndRemoveUntil(
           context,
-          MaterialPageRoute(builder: (context) => MainPage(CSTitle: CSTitle)),
+          MaterialPageRoute(
+            builder: (context) => MainPage(CSTitle: CSTitle),
+          ),
+          (Route<dynamic> route) => false, // 모든 이전 라우트 제거
         );
       } else if (storedHashedPassword != null && !BCrypt.checkpw(pw, storedHashedPassword)) {
         // 비밀번호 불일치 시의 동작
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('로그인 실패. 비밀번호를 확인하세요.')),
-        );
+        showSnackBarMessage(context, '로그인 실패. 비밀번호를 확인하세요.');
       } else {
         // storedHashedPassword가 null인 경우 (ID는 존재하지만 비밀번호 정보가 없는 경우)
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('비밀번호를 재설정해주세요.')),
-        );
+        showSnackBarMessage(context, '비밀번호를 재설정해주세요.');
       }
     } else {
       // ID가 존재하지 않는 경우
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('존재하지 않는 ID입니다.')),
-      );
+      showSnackBarMessage(context, '존재하지 않는 ID입니다.');
     }
   }
 
@@ -105,12 +101,10 @@ class _CSHomePageState extends State<CSHomePage> {
         children: [
           Image(image: AssetImage('assets/images/logo.png')),
           TextField(
-            style: TextStyle(fontSize: 15.0),
             controller: id_input,
             decoration: InputDecoration(labelText: 'ID : ')
           ),
           TextField(
-            style: TextStyle(fontSize: 15.0),
             controller: pw_input,
             obscureText: true,
             decoration: InputDecoration(labelText: '비밀번호 : ')

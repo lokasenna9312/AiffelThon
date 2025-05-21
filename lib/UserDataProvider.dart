@@ -43,7 +43,7 @@ class UserDataProvider extends ChangeNotifier {
     return null;
   }
 
-  void changePW(String id, String email, String hashedwantedPW) {
+  void changePW(String id, String hashedwantedPW, String email, ) {
     if (isUserRegistered(id) && isEmailEnlisted(email)) {
       _registeredUsers[id]?["pw"] = hashedwantedPW;
       saveUsersToJson();
@@ -54,7 +54,7 @@ class UserDataProvider extends ChangeNotifier {
     }
   }
 
-  void changeEmail(String id, String email, String pw) {
+  void changeEmail(String id, String pw, String email) {
     String storedHashedPassword = _registeredUsers[id]?["pw"];
     if (isUserRegistered(id) && BCrypt.checkpw(pw, storedHashedPassword)) {
       _registeredUsers[id]?["email"] = email;
@@ -164,6 +164,36 @@ class ValidationResult {
 }
 
 class UserDataProviderUtility {
+  Future<ValidationResult> RegisterAccount({
+    required String newID,
+    required String newPW,
+    required String newPW2,
+    required String newEmail,
+    required UserDataProvider userDataProvider,
+  }) async {
+    // 1. 모든 필수 필드 입력 여부 확인
+    if (newID.isEmpty || newPW.isEmpty || newPW2.isEmpty || newEmail.isEmpty) {
+      return ValidationResult.failure('모든 필드를 입력해주세요.');
+    }
+
+    // 2. 새 비밀번호와 확인 비밀번호 일치 여부 확인
+    if (newPW != newPW2) {
+      return ValidationResult.failure('비밀번호가 일치하지 않습니다.');
+    }
+
+    // 3. ID 존재 여부 확인 (UserDataProvider 통해)
+    if (userDataProvider.isUserRegistered(newID)) {
+      return ValidationResult.failure('이미 해당 ID로 가입된 회원이 있습니다.');
+    }
+
+    // 4. 입력된 이메일이 해당 ID와 일치하는지 확인 (보안 강화)
+    if (userDataProvider.isEmailEnlisted(newEmail)) {
+      return ValidationResult.failure('이미 해당 E메일로 가입된 회원이 있습니다.');
+    }
+
+    return ValidationResult.success('유효성 검사 성공');
+  }
+
   Future<ValidationResult> ValidateAndChangePW({
     required String newID,
     required String newPW,
@@ -202,18 +232,12 @@ class UserDataProviderUtility {
   Future<ValidationResult> ValidateAndChangeEmail({
     required String newID,
     required String newPW,
-    required String newPW2,
     required String newEmail,
     required UserDataProvider userDataProvider,
   }) async {
     // 1. 모든 필수 필드 입력 여부 확인
-    if (newID.isEmpty || newPW.isEmpty || newPW2.isEmpty || newEmail.isEmpty) {
+    if (newID.isEmpty || newPW.isEmpty  || newEmail.isEmpty) {
       return ValidationResult.failure('모든 필드를 입력해주세요.');
-    }
-
-    // 2. 현재 비밀번호와 확인 비밀번호 일치 여부 확인
-    if (newPW != newPW2) {
-      return ValidationResult.failure('비밀번호가 일치하지 않습니다.');
     }
 
     // 3. ID 존재 여부 확인 (UserDataProvider 통해)

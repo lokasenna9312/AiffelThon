@@ -5,7 +5,6 @@ import 'changepw.dart';
 import 'appbar.dart';
 import 'ui_utils.dart';
 import 'UserDataProvider.dart';
-import 'deleteaccount.dart';
 
 class ModifyAccountPage extends StatefulWidget {
   const ModifyAccountPage({super.key, required this.CSTitle});
@@ -21,7 +20,6 @@ class _ModifyAccountPageState extends State<ModifyAccountPage> {
   late UserDataProviderUtility utility;
   final _newID = TextEditingController();
   final _newPW = TextEditingController();
-  final _newPW2 = TextEditingController();
   final _newEmail = TextEditingController();
 
   late String CSTitle; // CSTitle 변수 선언
@@ -37,13 +35,11 @@ class _ModifyAccountPageState extends State<ModifyAccountPage> {
   void _changeEmail() async {
     final String newID = _newID.text.trim();
     final String newPW = _newPW.text.trim();
-    final String newPW2 = _newPW2.text.trim();
     final String newEmail = _newEmail.text.trim();
     
     final ValidationResult result = await utility.ValidateAndChangeEmail( // 반환 타입이 ValidationResult
       newID: newID,
       newPW: newPW,
-      newPW2: newPW2,
       newEmail: newEmail,
       userDataProvider: userDataProvider,
     );
@@ -53,12 +49,11 @@ class _ModifyAccountPageState extends State<ModifyAccountPage> {
       return;
     }
 
-    userDataProvider.changeEmail(newID, newEmail, newPW);
+    userDataProvider.changeEmail(newID, newPW, newEmail);
     showSnackBarMessage(context, 'E메일 주소가 변경되었습니다.\n바뀐 주소 : $newEmail');
 
     _newID.clear();
     _newPW.clear();
-    _newPW2.clear();
     _newEmail.clear();
   }
 
@@ -78,45 +73,23 @@ class _ModifyAccountPageState extends State<ModifyAccountPage> {
             decoration: const InputDecoration(labelText: '비밀번호'),
           ),
           TextField(
-            controller: _newPW2,
-            obscureText: true,
-            decoration: const InputDecoration(labelText: '비밀번호 확인'),
-          ),
-          TextField(
             controller: _newEmail,
             decoration: const InputDecoration(labelText: 'E-mail'),
           ),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround, // 버튼 사이에 공간을 줌
-            children: [
-              ElevatedButton(
-                onPressed: () => _changeEmail(),
-                child: Text('E메일 주소 변경'),
-              ),
-              ElevatedButton(
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => ChangePWPage(CSTitle: CSTitle),
-                    ),
-                  );
-                },
-                child: Text('비밀번호 변경'),
-              ),
-            ]
+          ElevatedButton(
+            onPressed: () => _changeEmail(),
+            child: Text('E메일 주소 변경'),
           ),
           ElevatedButton(
             onPressed: () {
-              // WithdrawPage로 이동하면서 title 값을 전달
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) => DeleteAccountPage(CSTitle: CSTitle),
+                  builder: (context) => ChangePWPage(CSTitle: CSTitle),
                 ),
               );
             },
-            child: Text('회원 탈퇴'),
+            child: Text('비밀번호 재설정 페이지로'),
           ),
         ],
       ),

@@ -6,6 +6,7 @@ import 'appbar.dart';
 import 'UserDataProvider.dart';
 import 'ui_utils.dart';
 import 'changepw.dart';
+import 'home.dart';
 
 class RegisterPage extends StatefulWidget {
   const RegisterPage({super.key, required this.CSTitle});
@@ -34,32 +35,47 @@ class _RegisterPageState extends State<RegisterPage> {
     utility = UserDataProviderUtility();
   }
 
-  void _registerUser() {
+  void _registerUser() async {
     final String newID = _newID.text.trim();
     final String newPW = _newPW.text.trim();
     final String newPW2 = _newPW2.text.trim();
     final String newEmail = _newEmail.text.trim();
 
-    if (newID.isNotEmpty && newPW.isNotEmpty && newPW2.isNotEmpty && newEmail.isNotEmpty && newPW == newPW2 && !userDataProvider.isUserRegistered(newID)) {
-      String hashedPW = BCrypt.hashpw(newPW, BCrypt.gensalt());
-      userDataProvider.addUser(newID, hashedPW, newEmail);
-      Navigator.pop(context); // 회원가입 완료 후 이전 화면으로 이동
-      showSnackBarMessage(context, '회원가입이 완료되었습니다.'); // 헬퍼 함수 사용
-    } else if (newID.isEmpty) {
-      showSnackBarMessage(context, 'ID를 입력하지 않았습니다.');
-    } else if (userDataProvider.isUserRegistered(newID)) {
-      showSnackBarMessage(context, '이미 존재하는 ID입니다.');
-    } else if (newPW.isEmpty || newPW2.isEmpty) {
-      showSnackBarMessage(context, '비밀번호를 입력하지 않았습니다.');
-    } else if (newPW != newPW2) {
-      showSnackBarMessage(context, '비밀번호가 맞지 않습니다.');
-    } else if (newEmail.isEmpty) {
-      showSnackBarMessage(context, 'E메일 주소를 입력하지 않았습니다.');
-    } else if (userDataProvider.isEmailEnlisted(newEmail)) {
-      showSnackBarMessage(context, '이미 가입된 E메일 주소입니다.');
-    } else {
-      showSnackBarMessage(context, '입력 내용을 확인해주세요.');
+    final ValidationResult result = await utility.RegisterAccount( // 반환 타입이 ValidationResult
+      newID: newID,
+      newPW: newPW,
+      newPW2: newPW2,
+      newEmail: newEmail,
+      userDataProvider: userDataProvider,
+    );
+
+    if (!result.isSuccess) {
+      showSnackBarMessage(context, result.message);
+      return;
     }
+
+    String hashedPW = BCrypt.hashpw(newPW, BCrypt.gensalt());
+    userDataProvider.addUser(newID, hashedPW, newEmail);
+
+    showSnackBarMessage(context, '회원가입이 완료되었습니다.\nID : $newID\nE메일 : $newEmail');
+
+    if (userDataProvider.isLoggedIn) {
+      userDataProvider.logoutUser();
+    }
+
+    userDataProvider.loginUser(newID, newEmail);
+    Navigator.pushAndRemoveUntil(
+      context,
+      MaterialPageRoute(
+        builder: (context) => MainPage(CSTitle: CSTitle),
+      ),
+      (Route<dynamic> route) => false, // 모든 이전 라우트 제거
+    );
+
+    _newID.clear();
+    _newPW.clear();
+    _newPW2.clear();
+    _newEmail.clear();
   }
 
   void _findID() {
@@ -100,30 +116,29 @@ class _RegisterPageState extends State<RegisterPage> {
             decoration: const InputDecoration(labelText: 'E-mail'),
           ),
           Text("ID 찾기는 E메일만 입력하시면 됩니다."),
-          ElevatedButton(
-            onPressed: () => _registerUser(),
-            child: Text('회원가입'),
-          ),
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround, // 버튼 사이에 공간을 줌
             children: [
+              ElevatedButton(
+                onPressed: () => _registerUser(),
+                child: Text('회원가입'),
+              ),
               ElevatedButton(
                 onPressed: () => _findID(),
                 child: Text('ID 찾기'),
               ),
-              ElevatedButton(
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => ChangePWPage(CSTitle: CSTitle),
-                    ),
-                  );
-                },
-                child: Text('비밀번호 재설정'),
-              ),
             ]
-          )
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => ChangePWPage(CSTitle: CSTitle),
+                ),
+              );
+            },
+            child: Text('비밀번호 재설정 페이지로'),
+          ),
         ],
       ),
     );
