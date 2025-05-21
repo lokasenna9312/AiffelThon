@@ -1,24 +1,24 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:bcrypt/bcrypt.dart';
 
 import 'appbar.dart';
-import 'UserDataProvider.dart';
 import 'ui_utils.dart';
+import 'UserDataProvider.dart';
+import 'deleteaccount.dart';
 import 'main.dart';
 
-class RegisterPage extends StatefulWidget {
-  const RegisterPage({super.key, required this.CSTitle});
+class ModifyAccountPage extends StatefulWidget {
+  const ModifyAccountPage({super.key, required this.CSTitle});
 
   final String CSTitle;
 
   @override
-  State<RegisterPage> createState() => _RegisterPageState();
+  State<ModifyAccountPage> createState() => _ModifyAccountPageState();
 }
 
-class _RegisterPageState extends State<RegisterPage> {
+class _ModifyAccountPageState extends State<ModifyAccountPage> {
   late UserDataProvider userDataProvider;
-  late UserDataProviderUtility utility; 
+  late UserDataProviderUtility utility;
   final _newID = TextEditingController();
   final _newPW = TextEditingController();
   final _newPW2 = TextEditingController();
@@ -34,49 +34,36 @@ class _RegisterPageState extends State<RegisterPage> {
     utility = UserDataProviderUtility();
   }
 
-  void _registerUser() {
+  void _changeEmail() async {
     final String newID = _newID.text.trim();
     final String newPW = _newPW.text.trim();
     final String newPW2 = _newPW2.text.trim();
     final String newEmail = _newEmail.text.trim();
+    
+    final ValidationResult result = await utility.ValidateAndChangeEmail( // 반환 타입이 ValidationResult
+      newID: newID,
+      newPW: newPW,
+      newPW2: newPW2,
+      newEmail: newEmail,
+      userDataProvider: userDataProvider,
+    );
 
-    if (newID.isNotEmpty && newPW.isNotEmpty && newPW2.isNotEmpty && newEmail.isNotEmpty && newPW == newPW2 && !userDataProvider.isUserRegistered(newID)) {
-      String hashedPW = BCrypt.hashpw(newPW, BCrypt.gensalt());
-      userDataProvider.addUser(newID, hashedPW, newEmail);
-      Navigator.pop(context); // 회원가입 완료 후 이전 화면으로 이동
-      showSnackBarMessage(context, '회원가입이 완료되었습니다.'); // 헬퍼 함수 사용
-    } else if (newID.isEmpty) {
-      showSnackBarMessage(context, 'ID를 입력하지 않았습니다.');
-    } else if (userDataProvider.isUserRegistered(newID)) {
-      showSnackBarMessage(context, '이미 존재하는 ID입니다.');
-    } else if (newPW.isEmpty || newPW2.isEmpty) {
-      showSnackBarMessage(context, '비밀번호를 입력하지 않았습니다.');
-    } else if (newPW != newPW2) {
-      showSnackBarMessage(context, '비밀번호가 맞지 않습니다.');
-    } else if (newEmail.isEmpty) {
-      showSnackBarMessage(context, 'E메일 주소를 입력하지 않았습니다.');
-    } else if (userDataProvider.isEmailEnlisted(newEmail)) {
-      showSnackBarMessage(context, '이미 가입된 E메일 주소입니다.');
-    } else {
-      showSnackBarMessage(context, '입력 내용을 확인해주세요.');
+    if (!result.isSuccess) {
+      showSnackBarMessage(context, result.message);
+      return;
     }
+
+    userDataProvider.changeEmail(newID, newEmail, newPW);
+    showSnackBarMessage(context, 'E메일 주소가 변경되었습니다.\n바뀐 주소 : $newEmail');
+
+    _newID.clear();
+    _newPW.clear();
+    _newPW2.clear();
+    _newEmail.clear();
   }
 
-  void _findID() {
-    final id = userDataProvider.findIdByEmail(_newEmail.text.trim());
-    String? _foundID;
-    setState(() {
-      _foundID = id;
-    });
-    if (_foundID != null) {
-      showSnackBarMessage(context, '찾으신 ID: $_foundID');
-    } else {
-      showSnackBarMessage(context, '해당 E메일로 가입된 회원은 없습니다.');
-    }
-  }
-
-  // _changePW() 함수는 modifyaccount.dart 파일에도 똑같이 정의되어 있습니다.
-  // 이 함수를 수정하시려면 modifyaccount.dart 파일의 함수도 똑같이 수정해주세요.
+  // _changePW() 함수는 register.dart 파일에도 똑같이 정의되어 있습니다.
+  // 이 함수를 수정하시려면 register.dart 파일의 함수도 똑같이 수정해주세요.
   void _changePW() async {
     final String newID = _newID.text.trim();
     final String newPW = _newPW.text.trim();
@@ -141,24 +128,31 @@ class _RegisterPageState extends State<RegisterPage> {
             controller: _newEmail,
             decoration: const InputDecoration(labelText: 'E-mail'),
           ),
-          Text("ID 찾기는 E메일만 입력하시면 됩니다.\n회원가입과 비밀번호 재설정은 위 입력칸을 모두 입력하십시오."),
-          ElevatedButton(
-            onPressed: () => _registerUser(),
-            child: Text('회원가입'),
-          ),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround, // 버튼 사이에 공간을 줌
             children: [
               ElevatedButton(
-                onPressed: () => _findID(),
-                child: Text('ID 찾기'),
+                onPressed: () => _changeEmail(),
+                child: Text('E메일 주소 변경'),
               ),
               ElevatedButton(
                 onPressed: () => _changePW(),
-                child: Text('비밀번호 재설정'),
+                child: Text('비밀번호 변경'),
               ),
             ]
-          )
+          ),
+          ElevatedButton(
+            onPressed: () {
+              // WithdrawPage로 이동하면서 title 값을 전달
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => DeleteAccountPage(CSTitle: CSTitle),
+                ),
+              );
+            },
+            child: Text('회원 탈퇴'),
+          ),
         ],
       ),
     );

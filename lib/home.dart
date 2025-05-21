@@ -1,11 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 
 import 'newexam.dart';
 import 'solvedq.dart';
 import 'community.dart';
 import 'appbar.dart';
-import 'register.dart';
 
 class MainPage extends StatelessWidget {
   final String CSTitle; // 이전 페이지 제목을 받을 변수
@@ -14,15 +12,10 @@ class MainPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final userDataProvider = Provider.of<UserDataProvider>(context);
-    final String? id = userDataProvider.loggedInUserId;
-    final String? email = userDataProvider.loggedInUserEmail;
-
     return Scaffold(
       appBar: CSAppBar(title: CSTitle),
       body: Column(
         children: [
-          Text("ID : $id\nE메일 : $email"),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [

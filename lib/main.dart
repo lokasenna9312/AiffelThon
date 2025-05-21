@@ -5,6 +5,7 @@ import 'package:bcrypt/bcrypt.dart';
 import 'register.dart';
 import 'home.dart';
 import 'appbar.dart';
+import 'UserDataProvider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized(); // runApp() 호출 전에 위젯 바인딩 초기화

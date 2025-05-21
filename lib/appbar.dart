@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import 'register.dart';
+import 'UserDataProvider.dart';
 import 'main.dart';
-import 'deleteaccount.dart';
+import 'account.dart';
 
 
 class CSAppBar extends StatelessWidget implements PreferredSizeWidget {
@@ -11,7 +11,6 @@ class CSAppBar extends StatelessWidget implements PreferredSizeWidget {
 
   const CSAppBar({super.key, required this.title});
 
-  // 로그인, 로그아웃 기능은 register.dart 파일에서 다룹니다.
   @override
   Widget build(BuildContext context) {
 
@@ -35,21 +34,22 @@ class CSAppBar extends StatelessWidget implements PreferredSizeWidget {
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(content: Text('로그아웃 되었습니다.')),
                   );
-                  Navigator.pushReplacement(
+                  Navigator.pushAndRemoveUntil(
                     context,
                     MaterialPageRoute(
                       builder: (context) => CSHomePage(CSTitle: title),
                     ),
+                    (Route<dynamic> route) => false, // 모든 이전 라우트 제거
                   );
                 }
               ),
               ElevatedButton(
-                child: Text('탈퇴'),
+                child: Text('회원정보'),
                 onPressed: () {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => WithdrawPage(CSTitle: title),
+                      builder: (context) => AccountInfoPage(CSTitle: title),
                     ),
                   );
                 }

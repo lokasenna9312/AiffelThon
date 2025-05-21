@@ -1,18 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'main.dart';
-import 'register.dart';
+import 'UserDataProvider.dart';
 import 'appbar.dart';
 
-class WithdrawPage extends StatefulWidget {
-  const WithdrawPage({super.key, required this.CSTitle});
+class DeleteAccountPage extends StatefulWidget {
+  const DeleteAccountPage({super.key, required this.CSTitle});
   final String CSTitle;
 
   @override
-  State<WithdrawPage> createState() => _WithdrawPageState();
+  State<DeleteAccountPage> createState() => _DeleteAccountPageState();
 }
 
-class _WithdrawPageState extends State<WithdrawPage> {
+class _DeleteAccountPageState extends State<DeleteAccountPage> {
   final _id = TextEditingController();
   final _email = TextEditingController();
   final _pw = TextEditingController();
@@ -25,7 +25,7 @@ class _WithdrawPageState extends State<WithdrawPage> {
     CSTitle = widget.CSTitle;
   }
 
-  void _withdrawAccount(BuildContext context) async {
+  void _DeleteAccountAccount(BuildContext context) async {
     final userDataProvider = Provider.of<UserDataProvider>(
         context, listen: false);
     final id = _id.text.trim();
@@ -35,13 +35,15 @@ class _WithdrawPageState extends State<WithdrawPage> {
     if (id.isNotEmpty && email.isNotEmpty && pw.isNotEmpty) {
       final isDeleted = await userDataProvider.deleteUser(id, email, pw);
       if (isDeleted) {
-        Navigator.pop(context); // 탈퇴 성공 후 이전 화면으로 이동 또는 다른 화면으로 이동
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('회원 탈퇴가 완료되었습니다.')),
         );
-        Navigator.pushReplacement(
+        Navigator.pushAndRemoveUntil(
           context,
-          MaterialPageRoute(builder: (context) => CSHomePage(CSTitle: CSTitle)),
+          MaterialPageRoute(
+            builder: (context) => CSHomePage(CSTitle: CSTitle),
+          ),
+              (Route<dynamic> route) => false, // 모든 이전 라우트 제거
         );
         // 필요하다면 로그아웃 처리 또는 앱 상태 초기화 로직 추가
       } else {
@@ -63,15 +65,15 @@ class _WithdrawPageState extends State<WithdrawPage> {
       body: Column(
         children: [
           TextField(controller: _id, decoration: const InputDecoration(labelText: 'ID')),
-          TextField(controller: _email, decoration: const InputDecoration(labelText: 'E-mail')),
           TextField(
             controller: _pw,
             obscureText: true,
             decoration: const InputDecoration(labelText: '비밀번호'),
           ),
+          TextField(controller: _email, decoration: const InputDecoration(labelText: 'E-mail')),
           Text("회원 탈퇴를 위해서는 ID와 E메일, 비밀번호를 모두 입력하셔야 합니다."),
           ElevatedButton(
-            onPressed: () => _withdrawAccount(context),
+            onPressed: () => _DeleteAccountAccount(context),
             child: const Text('회원 탈퇴'),
           ),
         ],
