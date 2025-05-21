@@ -117,6 +117,7 @@ class _RegisterPageState extends State<RegisterPage> {
           ),
           Text("ID 찾기는 E메일만 입력하시면 됩니다."),
           Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
               ElevatedButton(
                 onPressed: () => _registerUser(),
