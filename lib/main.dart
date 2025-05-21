@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:bcrypt/bcrypt.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'firebase_options.dart';
 
 import 'register.dart';
 import 'home.dart';
@@ -13,6 +15,10 @@ void main() async {
 
   final userDataProvider = UserDataProvider();
   await userDataProvider.loadUsersFromJson(); // 앱 시작 시 회원 정보 로드
+
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
 
   runApp(
     ChangeNotifierProvider.value(

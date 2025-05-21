@@ -1,8 +1,12 @@
+apply plugin: 'com.android.application'
+apply plugin: 'com.google.gms.google-services'
+
 plugins {
     id("com.android.application")
     id("kotlin-android")
     // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
     id("dev.flutter.flutter-gradle-plugin")
+    id("com.google.gms.google-services")
 }
 
 android {
@@ -37,6 +41,15 @@ android {
             signingConfig = signingConfigs.getByName("debug")
         }
     }
+}
+
+dependencies {
+    implementation flutter.embedding
+    implementation(platform("com.google.firebase:firebase-bom:33.13.0")) // 최신 Firebase BoM 버전 사용
+    implementation 'com.google.firebase:firebase-analytics' // Firebase Analytics
+    implementation 'com.google.firebase:firebase-auth'      // Firebase Authentication
+    implementation 'com.google.firebase:firebase-firestore' // Cloud Firestore
+    implementation 'androidx.multidex:multidex:2.0.1'
 }
 
 flutter {
