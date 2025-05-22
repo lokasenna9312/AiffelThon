@@ -5,11 +5,12 @@ import 'changepw.dart';
 import 'appbar.dart';
 import 'ui_utils.dart';
 import 'UserDataProvider.dart';
+import 'main.dart';
 
 class ModifyAccountPage extends StatefulWidget {
-  const ModifyAccountPage({super.key, required this.CSTitle});
+  const ModifyAccountPage({super.key, required this.title});
 
-  final String CSTitle;
+  final String title;
 
   @override
   State<ModifyAccountPage> createState() => _ModifyAccountPageState();
@@ -22,24 +23,22 @@ class _ModifyAccountPageState extends State<ModifyAccountPage> {
   final _newPW = TextEditingController();
   final _newEmail = TextEditingController();
 
-  late String CSTitle; // CSTitle 변수 선언
-
   @override
-  void initState() {
-    super.initState();
-    CSTitle = widget.CSTitle;
+  void didChangeDependencies() {
+    super.didChangeDependencies();
     userDataProvider = Provider.of<UserDataProvider>(context, listen: false);
     utility = UserDataProviderUtility();
   }
 
   void _changeEmail() async {
+    final userDataProvider = Provider.of<UserDataProvider>(context, listen: false);
     final String newID = _newID.text.trim();
     final String newPW = _newPW.text.trim();
     final String newEmail = _newEmail.text.trim();
     
-    final ValidationResult result = await utility.ValidateAndChangeEmail( // 반환 타입이 ValidationResult
-      newID: newID,
-      newPW: newPW,
+    final ValidationResult result = await utility.validateAndChangeEmail( // 반환 타입이 ValidationResult
+      id: newID,
+      pw: newPW,
       newEmail: newEmail,
       userDataProvider: userDataProvider,
     );
@@ -49,8 +48,16 @@ class _ModifyAccountPageState extends State<ModifyAccountPage> {
       return;
     }
 
-    userDataProvider.changeEmail(newID, newPW, newEmail);
-    showSnackBarMessage(context, 'E메일 주소가 변경되었습니다.\n바뀐 주소 : $newEmail');
+    showSnackBarMessage(context, '새 E메일 주소로 확인 링크를 보냈습니다. 링크를 클릭하여 E메일 변경을 완료해주세요.');
+
+    await userDataProvider.logoutUser();
+    Navigator.pushAndRemoveUntil(
+      context,
+      MaterialPageRoute(
+        builder: (context) => CSHomePage(title: widget.title), // 로그인 페이지로 이동
+      ),
+      (Route<dynamic> route) => false,
+    );
 
     _newID.clear();
     _newPW.clear();
@@ -60,7 +67,7 @@ class _ModifyAccountPageState extends State<ModifyAccountPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: CSAppBar(title: CSTitle),
+      appBar: CSAppBar(title: widget.title),
       body: Column(
         children: [
           TextField(
@@ -85,7 +92,7 @@ class _ModifyAccountPageState extends State<ModifyAccountPage> {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) => ChangePWPage(CSTitle: CSTitle),
+                  builder: (context) => ChangePWPage(title: widget.title),
                 ),
               );
             },

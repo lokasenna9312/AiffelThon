@@ -5,14 +5,14 @@ import 'qnabbs.dart';
 import 'appbar.dart';
 
 class CommunityPage extends StatelessWidget {
-  final String CSTitle; // 이전 페이지 제목을 받을 변수
+  final String title; // 이전 페이지 제목을 받을 변수
 
-  const CommunityPage({super.key, required this.CSTitle});
+  const CommunityPage({super.key, required this.title});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: CSAppBar(title: CSTitle),
+      appBar: CSAppBar(title: title),
       body: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
@@ -22,7 +22,7 @@ class CommunityPage extends StatelessWidget {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) => FreeBBSPage(CSTitle: CSTitle),
+                  builder: (context) => FreeBBSPage(title: title),
                 ),
               );
             },
@@ -34,7 +34,7 @@ class CommunityPage extends StatelessWidget {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) => QnABBSPage(CSTitle: CSTitle),
+                  builder: (context) => QnABBSPage(title: title),
                 ),
               );
             },

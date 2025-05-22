@@ -4,22 +4,15 @@ import 'package:dart_openai/dart_openai.dart';
 import 'appbar.dart';
 
 class PublishedExam extends StatefulWidget {
-  final String CSTitle; // 이전 페이지 제목을 받을 변수
+  final String title; // 이전 페이지 제목을 받을 변수
 
-  const PublishedExam({super.key, required this.CSTitle});
+  const PublishedExam({super.key, required this.title});
 
   @override
   _NewExamPageTempState createState() => _NewExamPageTempState();
 }
 
 class _NewExamPageTempState extends State<PublishedExam> {
-  late String CSTitle; // CSTitle 변수 선언
-
-  @override
-  void initState() {
-    super.initState();
-    CSTitle = widget.CSTitle;
-  }
 
   final _formKey = GlobalKey<FormState>();
   String problemText = '';
@@ -45,7 +38,7 @@ class _NewExamPageTempState extends State<PublishedExam> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: CSAppBar(title: CSTitle),
+      appBar: CSAppBar(title: widget.title),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Form(

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:bcrypt/bcrypt.dart';
+
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
 
@@ -13,8 +13,11 @@ import 'ui_utils.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized(); // runApp() 호출 전에 위젯 바인딩 초기화
 
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
+
   final userDataProvider = UserDataProvider();
-  await userDataProvider.loadUsersFromJson(); // 앱 시작 시 회원 정보 로드
 
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
@@ -39,17 +42,17 @@ class CertificateStudy extends StatelessWidget {
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
       ),
-      home: const CSHomePage(CSTitle: '서술형도 한다'),
+      home: const CSHomePage(title: '서술형도 한다'),
       // 이 위치의 "서술형도 한다" 가 AppBar에 출력되는 문구입니다.
-      // 다른 페이지의 AppBar에선 CSTitle이라는 변수명으로 호출됩니다.
+      // 다른 페이지의 AppBar에선 title이라는 변수명으로 호출됩니다.
     );
   }
 }
 
 class CSHomePage extends StatefulWidget {
-  final String CSTitle;
+  final String title;
 
-  const CSHomePage({super.key, required this.CSTitle});
+  const CSHomePage({super.key, required this.title});
 
   @override
   State<CSHomePage> createState() => _CSHomePageState();
@@ -59,50 +62,46 @@ class _CSHomePageState extends State<CSHomePage> {
   final id_input = TextEditingController();
   final pw_input = TextEditingController();
 
-  late String CSTitle; // CSTitle 변수 선언
-
-  @override
-  void initState() {
-    super.initState();
-    CSTitle = widget.CSTitle;
-  }
-
-  void _processLogin(BuildContext context) {
-    String id = id_input.text;
-    String pw = pw_input.text;
+  void _processLogin(BuildContext context) async {
+    String id = id_input.text.trim();
+    String pw = pw_input.text.trim();
 
     final userDataProvider = Provider.of<UserDataProvider>(context, listen: false);
-    if (userDataProvider.registeredUsers.containsKey(id)) {
-      String? storedHashedPassword = userDataProvider.registeredUsers[id]?["pw"];
-      String? email = userDataProvider.registeredUsers[id]?["email"];
-      if (storedHashedPassword != null && BCrypt.checkpw(pw, storedHashedPassword) && email != null) {
-        // 로그인 성공 시의 동작
-        userDataProvider.loginUser(id, email); // 로그인 상태 업데이트
-        showSnackBarMessage(context, '로그인 성공!');
-        Navigator.pushAndRemoveUntil(
-          context,
-          MaterialPageRoute(
-            builder: (context) => MainPage(CSTitle: CSTitle),
-          ),
-          (Route<dynamic> route) => false, // 모든 이전 라우트 제거
-        );
-      } else if (storedHashedPassword != null && !BCrypt.checkpw(pw, storedHashedPassword)) {
-        // 비밀번호 불일치 시의 동작
-        showSnackBarMessage(context, '로그인 실패. 비밀번호를 확인하세요.');
-      } else {
-        // storedHashedPassword가 null인 경우 (ID는 존재하지만 비밀번호 정보가 없는 경우)
-        showSnackBarMessage(context, '비밀번호를 재설정해주세요.');
-      }
+    final userDataProviderUtility = UserDataProviderUtility();
+
+    // ID와 비밀번호 입력 필드 검사
+    if (id.isEmpty || pw.isEmpty) {
+      showSnackBarMessage(context, 'ID와 비밀번호를 모두 입력해주세요.');
+      return;
+    }
+
+    // UserDataProviderUtility를 통해 ID 기반 로그인 유효성 검사 및 처리 시도
+    final ValidationResult result = await userDataProviderUtility.validateAndLoginById(
+      id: id,
+      pw: pw,
+      userDataProvider: userDataProvider,
+    );
+
+    if (result.isSuccess) {
+      // 로그인 성공 시
+      showSnackBarMessage(context, result.message); // ValidationResult에서 반환된 메시지 사용
+      Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(
+          builder: (context) => HomePage(title: widget.title), // 로그인 성공 후 이동할 메인 페이지
+        ),
+        (Route<dynamic> route) => false, // 모든 이전 라우트 제거
+      );
     } else {
-      // ID가 존재하지 않는 경우
-      showSnackBarMessage(context, '존재하지 않는 ID입니다.');
+      // 로그인 실패 시
+      showSnackBarMessage(context, result.message); // ValidationResult에서 반환된 실패 메시지 사용
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: CSAppBar(title: CSTitle),
+      appBar: CSAppBar(title: widget.title),
       body: Column(
         children: [
           Image(image: AssetImage('assets/images/logo.png')),
@@ -129,7 +128,7 @@ class _CSHomePageState extends State<CSHomePage> {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => RegisterPage(CSTitle: CSTitle),
+                      builder: (context) => RegisterPage(title: widget.title),
                     ),
                   );
                 },
