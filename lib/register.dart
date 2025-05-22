@@ -6,7 +6,6 @@ import 'appbar.dart';
 import 'UserDataProvider.dart';
 import 'ui_utils.dart';
 import 'changepw.dart';
-import 'main.dart'; // CSHomePage가 main.dart에 정의되어 있다면 필요합니다.
 import 'home.dart'; // HomePage가 home.dart에 정의되어 있습니다.
 
 class RegisterPage extends StatefulWidget {

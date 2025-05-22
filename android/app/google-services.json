@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "138269778259",
+    "project_id": "certificatestudyaiffelcore12th",
+    "storage_bucket": "certificatestudyaiffelcore12th.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:138269778259:android:4e82f97766e8d34285c1a6",
+        "android_client_info": {
+          "package_name": "com.example.certificate_study"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAo_xFku7RSNgoNXd25tnCFcTql66kRKDg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
