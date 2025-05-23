@@ -59,7 +59,7 @@ class _ChangePWPageState extends State<ChangePWPage> {
     // 로그인 페이지 또는 앱의 초기 화면으로 이동
     Navigator.pushAndRemoveUntil( // 현재 스택의 모든 위젯을 제거하고 새 위젯으로 대체
       context,
-      MaterialPageRoute(builder: (context) => CSHomePage(title: widget.title)), // 가정된 로그인 페이지
+      MaterialPageRoute(builder: (context) => MainPage(title: widget.title)), // 가정된 로그인 페이지
           (Route<dynamic> route) => false, // 모든 이전 라우트 제거
     );
 

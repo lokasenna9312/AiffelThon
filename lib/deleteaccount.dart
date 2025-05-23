@@ -39,7 +39,7 @@ class _DeleteAccountPageState extends State<DeleteAccountPage> {
         Navigator.pushAndRemoveUntil(
           context,
           MaterialPageRoute(
-            builder: (context) => CSHomePage(title: widget.title),
+            builder: (context) => MainPage(title: widget.title),
           ),
           (Route<dynamic> route) => false, // 모든 이전 라우트 제거
         );

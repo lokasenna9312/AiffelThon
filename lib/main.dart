@@ -42,23 +42,23 @@ class CertificateStudy extends StatelessWidget {
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
       ),
-      home: const CSHomePage(title: '서술형도 한다'),
+      home: const MainPage(title: '서술형도 한다'),
       // 이 위치의 "서술형도 한다" 가 AppBar에 출력되는 문구입니다.
       // 다른 페이지의 AppBar에선 title이라는 변수명으로 호출됩니다.
     );
   }
 }
 
-class CSHomePage extends StatefulWidget {
+class MainPage extends StatefulWidget {
   final String title;
 
-  const CSHomePage({super.key, required this.title});
+  const MainPage({super.key, required this.title});
 
   @override
-  State<CSHomePage> createState() => _CSHomePageState();
+  State<MainPage> createState() => _MainPageState();
 }
 
-class _CSHomePageState extends State<CSHomePage> {
+class _MainPageState extends State<MainPage> {
   final id_input = TextEditingController();
   final pw_input = TextEditingController();
 

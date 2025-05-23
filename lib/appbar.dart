@@ -76,7 +76,7 @@ class _CSAppBarState extends State<CSAppBar> { // State 클래스 생성
                           Navigator.pushAndRemoveUntil(
                             context,
                             MaterialPageRoute(
-                              builder: (context) => CSHomePage(title: widget.title),
+                              builder: (context) => MainPage(title: widget.title),
                             ),
                             (Route<dynamic> route) => false,
                           );

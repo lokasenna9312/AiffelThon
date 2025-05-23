@@ -54,7 +54,7 @@ class _ModifyAccountPageState extends State<ModifyAccountPage> {
     Navigator.pushAndRemoveUntil(
       context,
       MaterialPageRoute(
-        builder: (context) => CSHomePage(title: widget.title), // 로그인 페이지로 이동
+        builder: (context) => MainPage(title: widget.title), // 로그인 페이지로 이동
       ),
       (Route<dynamic> route) => false,
     );
