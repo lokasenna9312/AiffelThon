@@ -85,4 +85,5 @@ class DefaultFirebaseOptions {
     storageBucket: 'certificatestudyaiffelcore12th.firebasestorage.app',
     measurementId: 'G-D1NZ0MCPSC',
   );
+
 }

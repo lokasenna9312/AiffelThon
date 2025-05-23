@@ -37,6 +37,7 @@ dependencies:
   http: ^1.1.0
   csv: ^6.0.0
   file_picker: ^10.1.9
+  firebase_data_connect: ^0.1.5 # 이 부분 추가. 최신 버전을 확인하거나, README에 명시된 버전을 사용하세요.
   firebase_core: ^3.13.1
   firebase_auth: ^5.5.4 # 사용자 인증
   cloud_firestore: ^5.6.8 # NoSQL 데이터베이스
