@@ -19,8 +19,8 @@ class ModifyAccountPage extends StatefulWidget {
 class _ModifyAccountPageState extends State<ModifyAccountPage> {
   late UserDataProvider userDataProvider;
   late UserDataProviderUtility utility;
-  final _newID = TextEditingController();
-  final _newPW = TextEditingController();
+  final _id = TextEditingController();
+  final _pw = TextEditingController();
   final _newEmail = TextEditingController();
 
   @override
@@ -32,13 +32,20 @@ class _ModifyAccountPageState extends State<ModifyAccountPage> {
 
   void _changeEmail() async {
     final userDataProvider = Provider.of<UserDataProvider>(context, listen: false);
-    final String newID = _newID.text.trim();
-    final String newPW = _newPW.text.trim();
+    final String id = _id.text.trim();
+    final String pw = _pw.text.trim();
     final String newEmail = _newEmail.text.trim();
-    
+
+    if (id.isEmpty || pw.isEmpty || newEmail.isEmpty) {
+      showSnackBarMessage(context, '모든 필드를 입력해주세요.');
+      return; // 유효성 검사 실패 시 함수 종료
+    }
+    // 여기까지 통과하면 최소한 필드가 비어있지는 않음
+
+    // 기존의 비즈니스 로직 유효성 검사는 UserDataProviderUtility 내부에서 계속 수행됩니다.
     final ValidationResult result = await utility.validateAndChangeEmail( // 반환 타입이 ValidationResult
-      id: newID,
-      pw: newPW,
+      id: id,
+      pw: pw,
       newEmail: newEmail,
       userDataProvider: userDataProvider,
     );
@@ -59,8 +66,8 @@ class _ModifyAccountPageState extends State<ModifyAccountPage> {
       (Route<dynamic> route) => false,
     );
 
-    _newID.clear();
-    _newPW.clear();
+    _id.clear();
+    _pw.clear();
     _newEmail.clear();
   }
 
@@ -71,11 +78,11 @@ class _ModifyAccountPageState extends State<ModifyAccountPage> {
       body: Column(
         children: [
           TextField(
-            controller: _newID,
+            controller: _id,
             decoration: const InputDecoration(labelText: 'ID'),
           ),
           TextField(
-            controller: _newPW,
+            controller: _pw,
             obscureText: true,
             decoration: const InputDecoration(labelText: '비밀번호'),
           ),
