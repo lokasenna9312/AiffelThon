@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart'; // Firebase 인증
 import 'package:cloud_firestore/cloud_firestore.dart'; // Firestore 데이터베이스
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 
 // ValidationResult 클래스는 유효성 검사 결과를 반환하기 위한 헬퍼 클래스입니다.
 class ValidationResult {
@@ -55,7 +57,6 @@ class UserDataProvider extends ChangeNotifier {
         String? id = await loggedInUserId; // await 추가
         print('Auth state changed: loggedInId (from getter) = $id');
 
-        // <<< 수정된 부분: 로그인 시 Firestore의 이메일과 Firebase Auth의 이메일 동기화 >>>
         // 사용자가 이메일 변경 확인 링크를 클릭하여 Firebase Auth의 이메일이 변경된 후
         // 다시 로그인했을 때, Firestore의 이메일도 업데이트합니다.
         String? firestoreEmail = (await _firestore.collection('users').doc(user.uid).get()).data()?['email'];
@@ -69,7 +70,7 @@ class UserDataProvider extends ChangeNotifier {
           } catch (e) {
             print('Firestore 이메일 업데이트 중 오류 발생: $e');
           }
-        }  // <<< 수정된 부분 끝 >>>
+        }
       }
       print('Auth state changed: loggedInEmail = ${loggedInUserEmail}');
       notifyListeners(); // 로그인 상태 변화 시 UI를 업데이트하도록 알립니다.
@@ -119,10 +120,18 @@ class UserDataProvider extends ChangeNotifier {
           'email': email, // Firebase Authentication의 이메일과 동일하게 저장
           // 필요한 경우 다른 사용자 정보도 여기에 추가할 수 있습니다.
         });
-
-        await user.sendEmailVerification();
-
-        return ValidationResult.success('회원가입 성공!\nID : $id\nE-mail : $email\nE메일 인증 링크를 확인해주세요.');
+        try {
+          await user.sendEmailVerification();
+          return ValidationResult.success('회원가입 성공!\nID : $id\nE-mail : $email\nE메일 인증 링크를 확인해주세요.');
+        } on FirebaseAuthException catch (e) {
+          // sendEmailVerification에서만 발생하는 too-many-requests 오류 처리
+          if (e.code == 'too-many-requests') {
+            // 회원가입은 성공했으니, 이메일 발송 실패만 안내
+            return ValidationResult.failure('회원가입은 성공했지만, 인증 이메일 발송 요청이 너무 많습니다.\n잠시 후 앱에서 "인증 메일 재전송"을 시도해주세요.');
+          }
+          // 기타 sendEmailVerification 관련 오류 (이 경우 회원가입은 성공한 상태)
+          return ValidationResult.failure('회원가입 성공! 하지만 인증 이메일 발송 중 오류가 발생했습니다: ${e.message}');
+        }
       } else {
         // user 객체가 null인 경우 (매우 드물지만 안전을 위해)
         return ValidationResult.failure('회원가입에 실패했습니다: 사용자 정보 없음');
@@ -135,6 +144,8 @@ class UserDataProvider extends ChangeNotifier {
         return ValidationResult.failure('이미 사용 중인 이메일입니다.');
       } else if (e.code == 'invalid-email') {
         return ValidationResult.failure('유효하지 않은 이메일 형식입니다.');
+      } else if (e.code == 'too-many-requests') { // 이 부분의 too-many-requests는 계정 생성 자체가 차단된 경우 (흔치 않음)
+        return ValidationResult.failure('너무 많은 회원가입 요청이 발생했습니다. 잠시 후 다시 시도해주세요.');
       }
       return ValidationResult.failure('회원가입 오류: ${e.message}');
     } catch (e) {
@@ -169,6 +180,8 @@ class UserDataProvider extends ChangeNotifier {
         return ValidationResult.failure('유효하지 않은 이메일 형식입니다. (내부 오류)');
       } else if (e.code == 'user-disabled') {
         return ValidationResult.failure('이 계정은 비활성화되었습니다.');
+      } else if (e.code == 'too-many-requests') {
+        return ValidationResult.failure('너무 많은 로그인 시도가 발생했습니다. 잠시 후 다시 시도해주세요.');
       }
       return ValidationResult.failure('로그인 오류: ${e.message}');
     } catch (e) {
@@ -227,6 +240,8 @@ class UserDataProvider extends ChangeNotifier {
         // 단순히 이메일을 보내지 않는 경우가 많지만, 안전을 위해 포함합니다.
         // 위에 Firestore 검증을 통해 대부분 걸러지겠지만, 만약을 대비합니다.
         return ValidationResult.failure('입력하신 E메일로 등록된 사용자가 없습니다.');
+      }   else if (e.code == 'too-many-requests') {
+        return ValidationResult.failure('너무 많은 비밀번호 재설정 요청이 발생했습니다. 잠시 후 다시 시도해주세요.');
       }
       return ValidationResult.failure('비밀번호 재설정 이메일 전송 오류: ${e.message}');
     } catch (e) {
@@ -274,6 +289,8 @@ class UserDataProvider extends ChangeNotifier {
         return ValidationResult.failure('입력하신 E메일은 이미 다른 계정으로 등록되어 있습니다.');
       } else if (e.code == 'invalid-email') {
         return ValidationResult.failure('유효하지 않은 이메일 형식입니다.');
+      } else if (e.code == 'too-many-requests') {
+        return ValidationResult.failure('너무 많은 이메일 변경 요청이 발생했습니다. 잠시 후 다시 시도해주세요.');
       }
       return ValidationResult.failure('이메일 변경 오류: ${e.message}');
     } catch (e) {

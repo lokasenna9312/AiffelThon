@@ -7,6 +7,7 @@ import 'community.dart';
 import 'appbar.dart';
 import 'UserDataProvider.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'ui_utils.dart';
 
 class HomePage extends StatelessWidget {
   final String title;
@@ -51,9 +52,7 @@ class HomePage extends StatelessWidget {
                           ElevatedButton(
                             onPressed: () async {
                               await currentUser.sendEmailVerification();
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(content: Text('인증 이메일을 다시 보냈습니다. 메일을 확인해주세요.')),
-                              );
+                              showSnackBarMessage(context, '인증 이메일을 다시 보냈습니다. 메일을 확인해주세요.');
                             },
                             child: Text('인증 이메일 다시 보내기'),
                           ),
@@ -66,13 +65,9 @@ class HomePage extends StatelessWidget {
                               userDataProvider.notifyListeners(); // UserDataProvider에게 상태 변경 알림 (UI 업데이트용)
                               print('>>> [인증 새로고침 버튼] notifyListeners 호출됨.');
                               if (currentUser.emailVerified) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(content: Text('이메일 인증이 확인되었습니다!')),
-                                );
+                                showSnackBarMessage(context, '이메일 인증이 확인되었습니다!');
                               } else {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(content: Text('아직 이메일이 인증되지 않았습니다. 메일을 확인해주세요.')),
-                                );
+                                showSnackBarMessage(context, '아직 이메일이 인증되지 않았습니다. 메일을 확인해주세요.');
                               }
                             },
                             child: Text('인증 상태 새로고침'),
