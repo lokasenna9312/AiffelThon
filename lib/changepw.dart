@@ -18,11 +18,8 @@ class ChangePWPage extends StatefulWidget {
 class _ChangePWPageState extends State<ChangePWPage> {
   late UserDataProvider userDataProvider;
   late UserDataProviderUtility utility;
-  final _newID = TextEditingController();
-  final _currentPW = TextEditingController();
-  final _newPW = TextEditingController();
-  final _newPW2 = TextEditingController();
-  
+  final _id = TextEditingController();
+  final _email = TextEditingController();
 
   @override
   void initState() {
@@ -32,16 +29,18 @@ class _ChangePWPageState extends State<ChangePWPage> {
   }
 
   void _changePW() async {
-    final String newID = _newID.text.trim();
-    final String currentPW = _currentPW.text.trim();
-    final String newPW = _newPW.text.trim();
-    final String newPW2 = _newPW2.text.trim();
+    final String id = _id.text.trim();
+    final String email = _email.text.trim();
+
+    // ID 또는 이메일이 비어있는 경우 먼저 검사
+    if (id.isEmpty || email.isEmpty) {
+      showSnackBarMessage(context, 'ID와 E메일을 모두 입력해주세요.');
+      return;
+    }
 
     final ValidationResult result = await utility.validateAndChangePW(
-      id: newID,
-      currentPW: currentPW,
-      newPW: newPW,
-      newPW2: newPW2,
+      id: id,
+      email: email,
       userDataProvider: userDataProvider,
     );
 
@@ -50,23 +49,16 @@ class _ChangePWPageState extends State<ChangePWPage> {
       return;
     }
 
-    userDataProvider.changePW(newID, currentPW, newPW);
-    showSnackBarMessage(context, '비밀번호가 성공적으로 변경되었습니다.');
+    showSnackBarMessage(context, result.message); // 성공 메시지를 SnackBar로 표시
+    _id.clear(); // ID 필드 초기화
+    _email.clear(); // E메일 필드 초기화
 
-    // 비밀번호 변경 후에는 기존 세션을 무효화하고 로그아웃 처리
-    userDataProvider.logoutUser(); // UserDataProvider의 logoutUser 메소드 호출
-
-    // 로그인 페이지 또는 앱의 초기 화면으로 이동
-    Navigator.pushAndRemoveUntil( // 현재 스택의 모든 위젯을 제거하고 새 위젯으로 대체
+    // 비밀번호 재설정 이메일 전송 후에는 사용자에게 로그인 페이지로 돌아가도록 안내
+    Navigator.pushAndRemoveUntil(
       context,
-      MaterialPageRoute(builder: (context) => MainPage(title: widget.title)), // 가정된 로그인 페이지
-          (Route<dynamic> route) => false, // 모든 이전 라우트 제거
+      MaterialPageRoute(builder: (context) => MainPage(title: widget.title)),
+          (Route<dynamic> route) => false,
     );
-
-    _newID.clear();
-    _currentPW.clear();
-    _newPW.clear();
-    _newPW2.clear();
   }
 
   @override
@@ -76,22 +68,12 @@ class _ChangePWPageState extends State<ChangePWPage> {
       body: Column(
         children: [
           TextField(
-            controller: _newID,
+            controller: _id,
             decoration: const InputDecoration(labelText: 'ID'),
           ),
           TextField(
-            controller: _currentPW,
+            controller: _email,
             decoration: const InputDecoration(labelText: '기존 비밀번호'),
-          ),
-          TextField(
-            controller: _newPW,
-            obscureText: true,
-            decoration: const InputDecoration(labelText: '수정할 비밀번호'),
-          ),
-          TextField(
-            controller: _newPW2,
-            obscureText: true,
-            decoration: const InputDecoration(labelText: '수정할 비밀번호 확인'),
           ),
           ElevatedButton(
             onPressed: () => _changePW(),

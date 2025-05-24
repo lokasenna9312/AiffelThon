@@ -52,8 +52,20 @@ class _RegisterPageState extends State<RegisterPage> {
       final String newPW2 = _newPW2.text.trim();
       final String newEmail = _newEmail.text.trim();
 
-      // 1. 클라이언트 측 유효성 검사 (ID 중복 확인 포함)
-      final ValidationResult clientValidationResult = await utility.registerAccount(
+      // 1. UI 단계에서 즉각적인 유효성 검사 (네트워크 요청 없음)
+      if (newID.isEmpty || newPW.isEmpty || newPW2.isEmpty || newEmail.isEmpty) {
+        showSnackBarMessage(context, '모든 필드를 입력해주세요.');
+        return; // 즉시 종료
+      }
+
+      if (newPW != newPW2) {
+        showSnackBarMessage(context, '비밀번호가 일치하지 않습니다.');
+        return; // 즉시 종료
+      }
+
+      // 2. 비즈니스 로직 유효성 검사 (ID 중복 확인 포함, 네트워크 요청 발생 가능)
+      //    이 시점에서는 이미 기본적인 필드 유효성은 검증된 상태
+      final ValidationResult result = await utility.registerAccount(
         newID: newID,
         newPW: newPW,
         newPW2: newPW2,
@@ -61,26 +73,23 @@ class _RegisterPageState extends State<RegisterPage> {
         userDataProvider: userDataProvider,
       );
 
-      if (!clientValidationResult.isSuccess) {
-        showSnackBarMessage(context, clientValidationResult.message);
+      if (!result.isSuccess) {
+        showSnackBarMessage(context, result.message);
         return; // 유효성 검사 실패 시 종료
       }
 
-      // 2. 실제 Firebase에 계정 생성 요청
-      print('>>> register.dart: Firebase 계정 생성 시도: $newEmail');
-      await userDataProvider.registerUser(newID, newPW, newEmail); // Firebase 계정 생성
-
+      // 3. 실제 Firebase에 계정 생성 요청 (utility.registerAccount 내부에서 처리 완료)
+      //    위 result가 성공이면 이미 계정 생성이 시도된 상태
       print('>>> register.dart: 회원가입 성공. Firebase 인증 상태 업데이트 대기 중.');
       showSnackBarMessage(context, '회원가입 성공! 이메일 인증 링크를 확인해주세요.');
 
-      // !!! 중요: Firebase 인증 상태가 완전히 확정될 때까지 기다립니다. !!!
-      // 계정 생성 후 Firebase는 자동으로 로그인 상태를 만듭니다.
       await FirebaseAuth.instance.authStateChanges().firstWhere((user) => user != null);
 
       print('>>> register.dart: Firebase 인증 상태 업데이트 확인 완료. 이제 화면 전환 시작.');
 
-      // 입력 필드 초기화
       _newID.clear();
+      _newPW.clear();
+      _newPW2.clear();
       _newEmail.clear();
 
       // 로그인된 상태의 메인 페이지로 이동합니다.
