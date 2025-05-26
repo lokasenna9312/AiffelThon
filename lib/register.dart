@@ -46,78 +46,54 @@ class _RegisterPageState extends State<RegisterPage> {
     }
     _isProcessingRegistration = true; // 처리 시작 플래그 설정
 
-    try {
-      final String newID = _newID.text.trim();
-      final String newPW = _newPW.text.trim();
-      final String newPW2 = _newPW2.text.trim();
-      final String newEmail = _newEmail.text.trim();
+    final String newID = _newID.text.trim();
+    final String newPW = _newPW.text.trim();
+    final String newPW2 = _newPW2.text.trim();
+    final String newEmail = _newEmail.text.trim();
 
-      // 1. UI 단계에서 즉각적인 유효성 검사 (네트워크 요청 없음)
-      if (newID.isEmpty || newPW.isEmpty || newPW2.isEmpty || newEmail.isEmpty) {
-        showSnackBarMessage(context, '모든 필드를 입력해주세요.');
-        return; // 즉시 종료
-      }
-
-      if (newPW != newPW2) {
-        showSnackBarMessage(context, '비밀번호가 일치하지 않습니다.');
-        return; // 즉시 종료
-      }
-
-      // 2. 비즈니스 로직 유효성 검사 (ID 중복 확인 포함, 네트워크 요청 발생 가능)
-      //    이 시점에서는 이미 기본적인 필드 유효성은 검증된 상태
-      final ValidationResult result = await utility.registerAccount(
-        newID: newID,
-        newPW: newPW,
-        newPW2: newPW2,
-        newEmail: newEmail,
-        userDataProvider: userDataProvider,
-      );
-
-      if (!result.isSuccess) {
-        showSnackBarMessage(context, result.message);
-        return; // 유효성 검사 실패 시 종료
-      }
-
-      // 3. 실제 Firebase에 계정 생성 요청 (utility.registerAccount 내부에서 처리 완료)
-      //    위 result가 성공이면 이미 계정 생성이 시도된 상태
-      print('>>> register.dart: 회원가입 성공. Firebase 인증 상태 업데이트 대기 중.');
-      showSnackBarMessage(context, '회원가입 성공! 이메일 인증 링크를 확인해주세요.');
-
-      await FirebaseAuth.instance.authStateChanges().firstWhere((user) => user != null);
-
-      print('>>> register.dart: Firebase 인증 상태 업데이트 확인 완료. 이제 화면 전환 시작.');
-
-      _newID.clear();
-      _newPW.clear();
-      _newPW2.clear();
-      _newEmail.clear();
-
-      // 로그인된 상태의 메인 페이지로 이동합니다.
-      Navigator.pushAndRemoveUntil(
-        context,
-        MaterialPageRoute(
-          builder: (context) => HomePage(title: widget.title), // `title` 사용
-        ),
-            (Route<dynamic> route) => false,
-      );
-
-    } on FirebaseAuthException catch (e) {
-      String errorMessage = '회원가입 오류: ${e.message}';
-      if (e.code == 'email-already-in-use') {
-        errorMessage = '이미 사용 중인 이메일입니다.';
-      } else if (e.code == 'weak-password') {
-        errorMessage = '비밀번호가 너무 약합니다.';
-      }
-      print('>>> register.dart: 회원가입 Firebase 오류: $errorMessage');
-      showSnackBarMessage(context, errorMessage);
-
-    } catch (e) {
-      print('>>> register.dart: 회원가입 알 수 없는 오류: $e');
-      showSnackBarMessage(context, '알 수 없는 오류 발생: $e');
-    } finally {
-      // !!! 새로 추가된 부분: 처리 완료 후 플래그 리셋 !!!
-      _isProcessingRegistration = false;
+    // UI 단계에서 즉각적인 유효성 검사 (네트워크 요청 없음)
+    if (newID.isEmpty || newPW.isEmpty || newPW2.isEmpty || newEmail.isEmpty) {
+      showSnackBarMessage(context, '모든 필드를 입력해주세요.');
+      return; // 즉시 종료
     }
+
+    if (newPW != newPW2) {
+      showSnackBarMessage(context, '비밀번호가 일치하지 않습니다.');
+      return; // 즉시 종료
+    }
+
+    // 이 시점에서는 이미 기본적인 필드 유효성은 검증된 상태
+    final ValidationResult result = await utility.registerAccount(
+      newID: newID,
+      newPW: newPW,
+      newEmail: newEmail,
+      userDataProvider: userDataProvider,
+    );
+
+    if (!result.isSuccess) {
+      showSnackBarMessage(context, result.message);
+      return; // 유효성 검사 실패 시 종료
+    }
+
+    showSnackBarMessage(context, '회원가입 성공! 이메일 인증 링크를 확인해주세요.');
+
+    await FirebaseAuth.instance.authStateChanges().firstWhere((user) => user != null);
+
+    print('>>> register.dart: Firebase 인증 상태 업데이트 확인 완료. 이제 화면 전환 시작.');
+
+    // 로그인된 상태의 메인 페이지로 이동합니다.
+    Navigator.pushAndRemoveUntil(
+      context,
+      MaterialPageRoute(
+        builder: (context) => HomePage(title: widget.title), // `title` 사용
+      ),
+          (Route<dynamic> route) => false,
+    );
+
+    _newID.clear();
+    _newPW.clear();
+    _newPW2.clear();
+    _newEmail.clear();
   }
 
   // ID 찾기 메소드

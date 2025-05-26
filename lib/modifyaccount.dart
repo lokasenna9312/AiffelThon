@@ -21,6 +21,7 @@ class _ModifyAccountPageState extends State<ModifyAccountPage> {
   late UserDataProviderUtility utility;
   final _id = TextEditingController();
   final _pw = TextEditingController();
+  final _email = TextEditingController();
   final _newEmail = TextEditingController();
 
   @override
@@ -34,9 +35,10 @@ class _ModifyAccountPageState extends State<ModifyAccountPage> {
     final userDataProvider = Provider.of<UserDataProvider>(context, listen: false);
     final String id = _id.text.trim();
     final String pw = _pw.text.trim();
+    final String email = _email.text.trim();
     final String newEmail = _newEmail.text.trim();
 
-    if (id.isEmpty || pw.isEmpty || newEmail.isEmpty) {
+    if (id.isEmpty || pw.isEmpty || email.isEmpty || newEmail.isEmpty) {
       showSnackBarMessage(context, '모든 필드를 입력해주세요.');
       return; // 유효성 검사 실패 시 함수 종료
     }
@@ -46,6 +48,7 @@ class _ModifyAccountPageState extends State<ModifyAccountPage> {
     final ValidationResult result = await utility.validateAndChangeEmail( // 반환 타입이 ValidationResult
       id: id,
       pw: pw,
+      email: email,
       newEmail: newEmail,
       userDataProvider: userDataProvider,
     );
@@ -68,6 +71,7 @@ class _ModifyAccountPageState extends State<ModifyAccountPage> {
 
     _id.clear();
     _pw.clear();
+    _email.clear();
     _newEmail.clear();
   }
 
@@ -87,8 +91,12 @@ class _ModifyAccountPageState extends State<ModifyAccountPage> {
             decoration: const InputDecoration(labelText: '비밀번호'),
           ),
           TextField(
+            controller: _email,
+            decoration: const InputDecoration(labelText: '기존의 E-mail'),
+          ),
+          TextField(
             controller: _newEmail,
-            decoration: const InputDecoration(labelText: 'E-mail'),
+            decoration: const InputDecoration(labelText: '변경할 E-mail'),
           ),
           ElevatedButton(
             onPressed: () => _changeEmail(),

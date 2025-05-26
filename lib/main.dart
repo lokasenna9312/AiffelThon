@@ -19,10 +19,6 @@ void main() async {
 
   final userDataProvider = UserDataProvider();
 
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
-  );
-
   runApp(
     ChangeNotifierProvider.value(
       value: userDataProvider,

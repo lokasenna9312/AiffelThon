@@ -50,15 +50,17 @@ class _ChangePWPageState extends State<ChangePWPage> {
     }
 
     showSnackBarMessage(context, result.message); // 성공 메시지를 SnackBar로 표시
-    _id.clear(); // ID 필드 초기화
-    _email.clear(); // E메일 필드 초기화
 
+    await userDataProvider.logoutUser();
     // 비밀번호 재설정 이메일 전송 후에는 사용자에게 로그인 페이지로 돌아가도록 안내
     Navigator.pushAndRemoveUntil(
       context,
       MaterialPageRoute(builder: (context) => MainPage(title: widget.title)),
           (Route<dynamic> route) => false,
     );
+
+    _id.clear(); // ID 필드 초기화
+    _email.clear(); // E메일 필드 초기화
   }
 
   @override
@@ -73,7 +75,7 @@ class _ChangePWPageState extends State<ChangePWPage> {
           ),
           TextField(
             controller: _email,
-            decoration: const InputDecoration(labelText: '기존 비밀번호'),
+            decoration: const InputDecoration(labelText: 'E-mail'),
           ),
           ElevatedButton(
             onPressed: () => _changePW(),

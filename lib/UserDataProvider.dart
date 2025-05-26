@@ -121,15 +121,19 @@ class UserDataProvider extends ChangeNotifier {
           // 필요한 경우 다른 사용자 정보도 여기에 추가할 수 있습니다.
         });
         try {
+          print('I/flutter: [AuthEmail] E메일 인증 메일 발송 시도: ${user.email}');
           await user.sendEmailVerification();
+          print('I/flutter: [AuthEmail] E메일 인증 메일 발송 요청 성공');
           return ValidationResult.success('회원가입 성공!\nID : $id\nE-mail : $email\nE메일 인증 링크를 확인해주세요.');
         } on FirebaseAuthException catch (e) {
           // sendEmailVerification에서만 발생하는 too-many-requests 오류 처리
+          print('E/flutter: [AuthEmail] FirebaseAuthException 발생 (sendEmailVerification): ${e.code} - ${e.message}');
           if (e.code == 'too-many-requests') {
             // 회원가입은 성공했으니, 이메일 발송 실패만 안내
             return ValidationResult.failure('회원가입은 성공했지만, 인증 이메일 발송 요청이 너무 많습니다.\n잠시 후 앱에서 "인증 메일 재전송"을 시도해주세요.');
           }
           // 기타 sendEmailVerification 관련 오류 (이 경우 회원가입은 성공한 상태)
+          print('E/flutter: [AuthEmail] 일반 오류 발생 (sendEmailVerification): $e');
           return ValidationResult.failure('회원가입 성공! 하지만 인증 이메일 발송 중 오류가 발생했습니다: ${e.message}');
         }
       } else {
@@ -138,6 +142,7 @@ class UserDataProvider extends ChangeNotifier {
       }
     } on FirebaseAuthException catch (e) {
       // Firebase Authentication 관련 오류 처리
+      print('E/flutter: [Auth] 회원가입 FirebaseAuthException: ${e.code} - ${e.message}');
       if (e.code == 'weak-password') {
         return ValidationResult.failure('비밀번호가 너무 약합니다.');
       } else if (e.code == 'email-already-in-use') {
@@ -150,6 +155,7 @@ class UserDataProvider extends ChangeNotifier {
       return ValidationResult.failure('회원가입 오류: ${e.message}');
     } catch (e) {
       // 기타 예상치 못한 오류 처리
+      print('E/flutter: [Auth] 회원가입 일반 오류: $e');
       return ValidationResult.failure('알 수 없는 오류 발생: $e');
     }
   }
@@ -214,9 +220,10 @@ class UserDataProvider extends ChangeNotifier {
 
   /// **비밀번호 재설정 이메일 전송 함수**
   /// 입력된 ID와 E메일을 매개변수로 받아 Firebase 비밀번호 재설정 이메일을 보냅니다.
-  /// ChangePW 메소드는 비밀번호 찾기 기능을 겸하기 때문에
-  /// 로그인되지 않은 상태에서도 유효성 검사를 할 수 있도록 맞췄습니다.
   Future<ValidationResult> changePW(String id, String email) async {
+    /// ChangePW 메소드는 비밀번호 찾기 기능을 겸하기 때문에
+    /// 로그인되지 않은 상태에서도 유효성 검사를 할 수 있도록 맞췄습니다.
+    //
     // 1. Firestore에서 주어진 ID에 해당하는 실제 이메일 주소를 조회합니다.
     String? storedEmail = await findEmailById(id);
 
@@ -231,10 +238,13 @@ class UserDataProvider extends ChangeNotifier {
 
     try {
       // 3. 검증된 이메일 주소로 Firebase Authentication의 비밀번호 재설정 이메일 전송
+      print('I/flutter: [PWReset] 비밀번호 재설정 메일 발송 시도: $email');
       await _auth.sendPasswordResetEmail(email: email);
+      print('I/flutter: [PWReset] 비밀번호 재설정 메일 발송 요청 성공');
       return ValidationResult.success('비밀번호 재설정 이메일을 $email (으)로 보냈습니다. 받은 편지함을 확인해주세요.');
     } on FirebaseAuthException catch (e) {
       // Firebase Authentication 관련 오류 처리
+      print('E/flutter: [PWReset] FirebaseAuthException 발생 (sendPasswordResetEmail): ${e.code} - ${e.message}');
       if (e.code == 'user-not-found' || e.code == 'invalid-email') {
         // sendPasswordResetEmail은 실제로 user-not-found를 반환하지 않고,
         // 단순히 이메일을 보내지 않는 경우가 많지만, 안전을 위해 포함합니다.
@@ -245,6 +255,7 @@ class UserDataProvider extends ChangeNotifier {
       }
       return ValidationResult.failure('비밀번호 재설정 이메일 전송 오류: ${e.message}');
     } catch (e) {
+      print('E/flutter: [PWReset] 일반 오류 발생 (sendPasswordResetEmail): $e');
       return ValidationResult.failure('알 수 없는 오류 발생: $e');
     }
   }
@@ -252,22 +263,20 @@ class UserDataProvider extends ChangeNotifier {
   /// 이메일 변경 함수: ID, 비밀번호, 새 이메일을 매개변수로 받습니다.
   /// 현재 로그인된 사용자의 이메일 주소를 변경합니다.
   /// Firebase는 이메일 변경 시 확인 이메일을 보내므로, 사용자에게 해당 안내가 필요합니다.
-  Future<ValidationResult> changeEmailAddress(String id, String pw, String newEmail) async {
+  Future<ValidationResult> changeEmailAddress(String id, String pw, String email, String newEmail) async {
     User? user = _auth.currentUser;
     if (user == null) {
       return ValidationResult.failure('로그인된 사용자가 없습니다.');
     }
 
-    // 현재 로그인된 사용자의 ID와 입력된 ID가 일치하는지 확인 (선택 사항, 보안 강화)
-    String? currentUserIdInFirestore = (await _firestore.collection('users').doc(user.uid).get()).data()?['id'];
-    if (currentUserIdInFirestore != id) {
-      return ValidationResult.failure('입력된 ID가 현재 로그인된 계정과 일치하지 않습니다.');
+    if (user.email != email) {
+      return ValidationResult.failure('입력하신 현재 E메일 주소가 로그인된 계정의 E메일 주소와 일치하지 않습니다.');
     }
 
     try {
-      // 1. 재인증: 민감한 작업이므로 현재 비밀번호(pw)로 사용자를 재인증합니다.
+      // 1. 재인증: 민감한 작업이므로 현재 로그인된 사용자의 E메일(email)과 비밀번호(pw)로 사용자를 재인증합니다.
       AuthCredential credential = EmailAuthProvider.credential(
-        email: user.email!, // 현재 로그인된 사용자의 이메일 사용
+        email: email, // 현재 로그인된 사용자의 이메일 사용
         password: pw, // 현재 비밀번호 변수명 'pw' 사용
       );
       await user.reauthenticateWithCredential(credential);
@@ -275,14 +284,16 @@ class UserDataProvider extends ChangeNotifier {
       // 2. Firebase Authentication의 verifyBeforeUpdateEmail을 사용하여 이메일 변경 시도
       //    이메일 확인 후 변경이 이루어집니다.
       //    이 호출은 확인 메일을 보내는 역할만 하며, 실제 Firebase Auth의 이메일은 아직 변경되지 않습니다.
+      print('I/flutter: [EmailChange] 이메일 변경 확인 메일 발송 시도: $newEmail');
       await user.verifyBeforeUpdateEmail(newEmail);
-
       // 이메일 변경은 사용자에게 확인 이메일을 보낸 후 적용됩니다.
-      return ValidationResult.success('새 이메일 주소로 확인 링크를 보냈습니다. 링크를 클릭하여 이메일 변경을 완료해주세요.');
+      print('I/flutter: [EmailChange] 이메일 변경 확인 메일 발송 요청 성공');
+      return ValidationResult.success('새 E메일 주소로 확인 링크를 보냈습니다. 링크를 클릭하여 이메일 변경을 완료해주세요.');
     } on FirebaseAuthException catch (e) {
       // Firebase Authentication 관련 오류 처리
+      print('E/flutter: [EmailChange] FirebaseAuthException 발생 (verifyBeforeUpdateEmail): ${e.code} - ${e.message}');
       if (e.code == 'wrong-password') {
-        return ValidationResult.failure('현재 비밀번호가 일치하지 않습니다.');
+        return ValidationResult.failure('입력하신 비밀번호가 계정의 비밀번호와 일치하지 않습니다.');
       } else if (e.code == 'requires-recent-login') {
         return ValidationResult.failure('보안을 위해 다시 로그인해야 합니다. 재로그인 후 다시 시도해주세요.');
       } else if (e.code == 'email-already-in-use') {
@@ -290,55 +301,100 @@ class UserDataProvider extends ChangeNotifier {
       } else if (e.code == 'invalid-email') {
         return ValidationResult.failure('유효하지 않은 이메일 형식입니다.');
       } else if (e.code == 'too-many-requests') {
-        return ValidationResult.failure('너무 많은 이메일 변경 요청이 발생했습니다. 잠시 후 다시 시도해주세요.');
+        return ValidationResult.failure('너무 많은 E메일 변경 요청이 발생했습니다. 잠시 후 다시 시도해주세요.');
+      } else if (e.code == 'user-not-found' || e.code == 'invalid-credential') {
+        return ValidationResult.failure('입력하신 이메일 또는 비밀번호가 올바르지 않습니다.');
       }
       return ValidationResult.failure('이메일 변경 오류: ${e.message}');
     } catch (e) {
+      print('E/flutter: [EmailChange] 일반 오류 발생 (verifyBeforeUpdateEmail): $e');
       return ValidationResult.failure('알 수 없는 오류 발생: $e');
     }
   }
 
   /// 회원 탈퇴 함수: ID와 비밀번호를 매개변수로 받습니다.
   /// 현재 로그인된 사용자의 계정을 삭제합니다. 민감한 작업이므로 재인증이 필요합니다.
-  Future<ValidationResult> deleteAccount(String id, String email, String pw) async {
+    Future<ValidationResult> deleteAccount(String id, String email, String pw) async {
     User? user = _auth.currentUser;
     if (user == null) {
       return ValidationResult.failure('로그인된 사용자가 없습니다.');
     }
 
-    // 현재 로그인된 사용자의 ID와 입력된 ID가 일치하는지 확인 (선택 사항, 보안 강화)
-    String? currentUserIdInFirestore = (await _firestore.collection('users').doc(user.uid).get()).data()?['id'];
-    if (currentUserIdInFirestore != id) {
-      return ValidationResult.failure('입력된 ID가 현재 로그인된 계정과 일치하지 않습니다.');
-    }
-
     try {
-      // 1. 재인증: 비밀번호(pw)로 사용자를 재인증합니다.
+      // 1. 현재 비밀번호로 재인증 (민감한 작업이므로 필수)
       AuthCredential credential = EmailAuthProvider.credential(
         email: user.email!, // 현재 로그인된 사용자의 이메일 사용
-        password: pw, // 현재 비밀번호 변수명 'pw' 사용
+        password: pw, // 입력된 현재 비밀번호
       );
       await user.reauthenticateWithCredential(credential);
 
-      // 2. Firestore에서 사용자 정보 삭제
-      // Firebase Authentication 계정 삭제 전에 Firestore 데이터 삭제를 시도합니다.
-      await _firestore.collection('users').doc(user.uid).delete();
+      // 2. 재인증 성공 시, 백엔드 Functions를 호출하여 계정 삭제 확인 이메일 발송 요청
+      // 이메일 발송 요청 Functions는 이미 requestAccountDeletionEmail 메소드에 있습니다.
+      ValidationResult emailRequestResult = await requestAccountDeletionEmail(id, email);
+      return emailRequestResult; // Functions 호출 결과 (성공/실패) 반환
 
-      // 3. Firebase Auth에서 계정 삭제
-      await user.delete();
-      return ValidationResult.success('계정이 성공적으로 삭제되었습니다.');
     } on FirebaseAuthException catch (e) {
       // Firebase Authentication 관련 오류 처리
       if (e.code == 'wrong-password') {
         return ValidationResult.failure('비밀번호가 일치하지 않습니다.');
       } else if (e.code == 'requires-recent-login') {
         return ValidationResult.failure('보안을 위해 다시 로그인해야 합니다. 재로그인 후 다시 시도해주세요.');
+      } else if (e.code == 'too-many-requests') {
+        return ValidationResult.failure('너무 많은 요청이 발생했습니다. 잠시 후 다시 시도해주세요.');
       }
-      return ValidationResult.failure('계정 삭제 오류: ${e.message}');
+      return ValidationResult.failure('계정 삭제 요청 오류: ${e.message}');
     } catch (e) {
       return ValidationResult.failure('알 수 없는 오류 발생: $e');
     }
   }
+
+  /// 이메일 발송 요청을 Firebase Functions에 보냅니다.
+  /// (이 코드는 이전에 `deleteAccount.dart`가 호출하던 Functions 호출 로직을 여기로 가져온 것입니다.)
+  Future<ValidationResult> requestAccountDeletionEmail(String id, String email) async {
+    // 이 URL은 main.py (Functions) 배포 후 얻은 실제 URL로 변경해야 합니다.
+    // Firebase Console -> Functions -> 'request_account_deletion' 함수 -> '트리거' 탭에서 확인
+    const String functionsUrl = "https://asia-northeast3-certificatestudyaiffelcore12th.cloudfunctions.net/request_account_deletion";
+
+    User? user = _auth.currentUser;
+    if (user == null) {
+      return ValidationResult.failure('로그인된 사용자가 없습니다.');
+    }
+
+    try {
+      print('Functions URL 호출 시도: $functionsUrl');
+      print('요청 바디: ${jsonEncode(<String, String>{'id': id, 'email': email})}');
+      final response = await http.post(
+        Uri.parse(functionsUrl),
+        headers: <String, String>{
+          'Content-Type': 'application/json; charset=UTF-8',
+        },
+        body: jsonEncode(<String, String>{
+          'id': id,
+          'email': email,
+        }),
+      );
+
+      print('Functions 응답 상태 코드: ${response.statusCode}');
+      print('Functions 응답 바디: ${response.body}');
+
+      if (response.statusCode == 200) {
+        return ValidationResult.success('회원 탈퇴 확인 이메일을 $email (으)로 보냈습니다. 받은 편지함을 확인해주세요.');
+      } else {
+        String errorMessage = '회원 탈퇴 요청에 실패했습니다.';
+        try {
+          final errorData = jsonDecode(response.body);
+          errorMessage = errorData['message'] ?? errorMessage;
+        } catch (e) {
+          // JSON 파싱 실패 시 기본 메시지 사용
+        }
+        return ValidationResult.failure('Functions 호출 오류: $errorMessage (상태 코드: ${response.statusCode})');
+      }
+    } catch (e) {
+      print('Firebase Functions 호출 중 네트워크 또는 기타 오류: $e');
+      return ValidationResult.failure('네트워크 오류 또는 서버 요청 실패: $e');
+    }
+  }
+
 
   /// 이메일로 ID 찾기 (Firestore 쿼리)
   /// 주어진 이메일 주소를 통해 Firestore에 저장된 사용자 지정 ID를 찾습니다.
@@ -367,27 +423,21 @@ class UserDataProviderUtility {
   Future<ValidationResult> registerAccount({
     required String newID, // 사용자에게 보여지는 ID
     required String newPW, // 비밀번호
-    required String newPW2, // 비밀번호 확인
     required String newEmail, // 이메일
     required UserDataProvider userDataProvider, // Firebase 기능이 있는 UserDataProvider 인스턴스
   }) async {
     // 1. 모든 필수 필드 입력 여부 확인
-    if (newID.isEmpty || newPW.isEmpty || newPW2.isEmpty || newEmail.isEmpty) {
+    if (newID.isEmpty || newPW.isEmpty || newEmail.isEmpty) {
       return ValidationResult.failure('모든 필드를 입력해주세요.');
     }
 
-    // 2. 새 비밀번호와 확인 비밀번호 일치 여부 확인
-    if (newPW != newPW2) {
-      return ValidationResult.failure('비밀번호가 일치하지 않습니다.');
-    }
-
-    // 3. 사용자 지정 ID 중복 확인 (Firestore 쿼리 이용)
+    // 2. 사용자 지정 ID 중복 확인 (Firestore 쿼리 이용)
     bool isIdTaken = await userDataProvider.isIdAlreadyTaken(newID);
     if (isIdTaken) {
       return ValidationResult.failure('이미 해당 ID로 가입된 회원이 있습니다.');
     }
 
-    // 4. 이메일 중복 확인은 Firebase Authentication의 createUserWithEmailAndPassword 메서드에서
+    // 3. 이메일 중복 확인은 Firebase Authentication의 createUserWithEmailAndPassword 메서드에서
     //    'email-already-in-use' 오류를 통해 자동으로 처리됩니다.
     //    따라서 여기서는 별도의 사전 이메일 중복 검사 로직을 넣지 않고,
     //    UserDataProvider의 registerUser 호출 시 반환되는 결과를 기다립니다.
@@ -444,11 +494,12 @@ class UserDataProviderUtility {
   Future<ValidationResult> validateAndChangeEmail({
     required String id, // 변경하려는 계정의 ID (로그인된 사용자와 일치하는지 확인용)
     required String pw, // 현재 비밀번호 (재인증용)
-    required String newEmail, // 변경할 새 이메일 주소
+    required String email, // 기존의 E메일 주소 (로그인된 사용자와 일치하는지 확인요)
+    required String newEmail, // 변경할 새 E메일 주소
     required UserDataProvider userDataProvider, // Firebase 기능이 있는 UserDataProvider 인스턴스
   }) async {
     // 1. 모든 필수 필드 입력 여부 확인
-    if (id.isEmpty || pw.isEmpty || newEmail.isEmpty) {
+    if (id.isEmpty || pw.isEmpty || email.isEmpty || newEmail.isEmpty) {
       return ValidationResult.failure('모든 필드를 입력해주세요.');
     }
 
@@ -458,18 +509,24 @@ class UserDataProviderUtility {
     }
 
     // 3. 입력된 ID가 현재 로그인된 사용자의 ID와 일치하는지 확인 (보안 강화)
-    String? loggedInId = (await userDataProvider.findIdByEmail(userDataProvider.currentUser!.email!));
+    String? loggedInId = (await userDataProvider.loggedInUserId);
     if (loggedInId != id) {
       return ValidationResult.failure('입력하신 ID가 현재 로그인된 계정과 일치하지 않습니다.');
     }
 
-    // 4. 기존 이메일 주소와 동일한지 확인
-    if (userDataProvider.currentUser!.email == newEmail) {
+    // 3. 입력된 E메일 주소가 현재 로그인된 사용자의 E메일 주소와 일치하는지 확인 (보안 강화)
+    String? loggedInEmail = (await userDataProvider.loggedInUserEmail);
+    if (loggedInEmail != email) {
+      return ValidationResult.failure('입력하신 ID가 현재 로그인된 계정과 일치하지 않습니다.');
+    }
+
+    // 5. 변경할 E메일 주소가 기존 E메일 주소와 동일한지 확인
+    if (userDataProvider.loggedInUserEmail == newEmail) {
       return ValidationResult.failure('기존 E메일 주소와 동일합니다. 다른 주소를 입력해주세요.');
     }
 
     // 모든 유효성 검사를 통과했다면, UserDataProvider를 통해 실제 이메일 변경 작업 위임
-    ValidationResult changeResult = await userDataProvider.changeEmailAddress(id, pw, newEmail);
+    ValidationResult changeResult = await userDataProvider.changeEmailAddress(id, pw, email, newEmail);
     return changeResult;
   }
 

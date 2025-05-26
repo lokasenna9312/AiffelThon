@@ -14,13 +14,20 @@ class DeleteAccountPage extends StatefulWidget {
 }
 
 class _DeleteAccountPageState extends State<DeleteAccountPage> {
+  late UserDataProvider userDataProvider;
+  late UserDataProviderUtility utility;
   final _id = TextEditingController();
   final _email = TextEditingController();
   final _pw = TextEditingController();
 
+  @override
+  void initState() {
+    super.initState();
+    userDataProvider = Provider.of<UserDataProvider>(context, listen: false);
+    utility = UserDataProviderUtility();
+  }
+
   void _deleteAccount(BuildContext context) async {
-    final userDataProvider = Provider.of<UserDataProvider>(
-        context, listen: false);
     final id = _id.text.trim();
     final email = _email.text.trim();
     final pw = _pw.text.trim();
@@ -30,29 +37,30 @@ class _DeleteAccountPageState extends State<DeleteAccountPage> {
       return; // 유효성 검사 실패 시 함수 종료
     }
 
-    final userDataProviderUtility = UserDataProviderUtility();
-    final ValidationResult result = await userDataProviderUtility.validateAndDeleteUser(
+    final ValidationResult result = await utility.validateAndDeleteUser(
       id: id,
       email: email,
-      pw: pw, // 'pw' 변수명 사용
+      pw: pw,
       userDataProvider: userDataProvider,
     );
 
-    if (result.isSuccess) {
-      showSnackBarMessage(context, '회원 탈퇴가 완료되었습니다.');
-      Navigator.pushAndRemoveUntil(
-        context,
-        MaterialPageRoute(
-          builder: (context) => MainPage(title: widget.title),
-        ),
-        (Route<dynamic> route) => false, // 모든 이전 라우트 제거
-      );
-      _id.clear();
-      _email.clear();
-      _pw.clear();
-    } else {
-      showSnackBarMessage(context, 'ID, 이메일 또는 비밀번호가 일치하지 않습니다.');
+    if (!result.isSuccess) {
+      showSnackBarMessage(context, result.message);
+      return;
     }
+
+    showSnackBarMessage(context, result.message); // 성공 메시지를 SnackBar로 표시
+
+    _id.clear(); // ID 필드 초기화
+    _email.clear(); // E메일 필드 초기화
+    _pw.clear(); // 비밀번호 필드 초기화
+
+    // 탈퇴 이메일 전송 후에는 사용자에게 로그인 페이지로 돌아가도록 안내
+    Navigator.pushAndRemoveUntil(
+      context,
+      MaterialPageRoute(builder: (context) => MainPage(title: widget.title)),
+          (Route<dynamic> route) => false,
+    );
   }
 
   @override
