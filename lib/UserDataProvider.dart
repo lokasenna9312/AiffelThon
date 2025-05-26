@@ -61,14 +61,14 @@ class UserDataProvider extends ChangeNotifier {
         // 다시 로그인했을 때, Firestore의 이메일도 업데이트합니다.
         String? firestoreEmail = (await _firestore.collection('users').doc(user.uid).get()).data()?['email'];
         if (firestoreEmail != null && firestoreEmail != user.email) {
-          print('Firestore 이메일($firestoreEmail)과 Firebase Auth 이메일(${user.email}) 불일치 감지. Firestore 업데이트 시도.');
+          print('Firestore E메일($firestoreEmail)과 Firebase Auth E메일(${user.email}) 불일치 감지. Firestore 업데이트 시도.');
           try {
             await _firestore.collection('users').doc(user.uid).update({
               'email': user.email,
             });
-            print('Firestore 이메일 업데이트 성공: ${user.email}');
+            print('Firestore E메일 업데이트 성공: ${user.email}');
           } catch (e) {
-            print('Firestore 이메일 업데이트 중 오류 발생: $e');
+            print('Firestore E메일 업데이트 중 오류 발생: $e');
           }
         }
       }
@@ -316,7 +316,8 @@ class UserDataProvider extends ChangeNotifier {
       await user.verifyBeforeUpdateEmail(newEmail);
       // 이메일 변경은 사용자에게 확인 이메일을 보낸 후 적용됩니다.
       print('I/flutter: [EmailChange] E메일 변경 확인 메일 발송 요청 성공');
-      return ValidationResult.success('새 E메일 주소로 확인 링크를 보냈습니다. 링크를 클릭하여 이메일 변경을 완료해주세요.');
+      return ValidationResult.success('새 E메일 주소로 확인 링크를 보냈습니다. 링크를 클릭하여 이메일 변경을 완료해주세요. '
+          '변경 완료 후에는 새 이메일 주소로 다시 로그인해주세요.'); // 사용자 안내 메시지 강화
     } on FirebaseAuthException catch (e) {
       // Firebase Authentication 관련 오류 처리
       print('E/flutter: [EmailChange] FirebaseAuthException 발생 (verifyBeforeUpdateEmail): ${e.code} - ${e.message}');

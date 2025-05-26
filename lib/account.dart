@@ -59,6 +59,9 @@ class _AccountInfoPageState extends State<AccountInfoPage> {
           const Text(
             '회원정보창입니다. 이 자리에 본인의 학습 내역이 들어올 예정입니다.',
           ),
+          Text(
+            '현재 수정 및 탈퇴 기능은 작동하지 않음을 유의하십시오!',
+          ),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
