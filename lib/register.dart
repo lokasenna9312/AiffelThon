@@ -7,6 +7,7 @@ import 'UserDataProvider.dart';
 import 'ui_utils.dart';
 import 'changepw.dart';
 import 'home.dart'; // HomePage가 home.dart에 정의되어 있습니다.
+import 'main.dart';
 
 class RegisterPage extends StatefulWidget {
   const RegisterPage({super.key, required this.title});
@@ -75,17 +76,16 @@ class _RegisterPageState extends State<RegisterPage> {
       return; // 유효성 검사 실패 시 종료
     }
 
-    showSnackBarMessage(context, '회원가입 성공! 이메일 인증 링크를 확인해주세요.');
-
     await FirebaseAuth.instance.authStateChanges().firstWhere((user) => user != null);
-
+    showSnackBarMessage(context, '회원가입 성공! 이메일 인증 링크를 확인해주세요.');
     print('>>> register.dart: Firebase 인증 상태 업데이트 확인 완료. 이제 화면 전환 시작.');
+    await userDataProvider.logoutUser();
 
-    // 로그인된 상태의 메인 페이지로 이동합니다.
+    // 로그아웃된 상태의 메인 페이지로 이동합니다.
     Navigator.pushAndRemoveUntil(
       context,
       MaterialPageRoute(
-        builder: (context) => HomePage(title: widget.title), // `title` 사용
+        builder: (context) => MainPage(title: widget.title), // `title` 사용
       ),
           (Route<dynamic> route) => false,
     );

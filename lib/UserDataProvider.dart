@@ -178,6 +178,7 @@ class UserDataProvider extends ChangeNotifier {
       return ValidationResult.success('로그인 성공');
     } on FirebaseAuthException catch (e) {
       // Firebase Authentication 관련 오류 처리
+      print('E/flutter: [Login] FirebaseAuthException 발생: ${e.code} - ${e.message}'); // 상세 로그 추가
       if (e.code == 'user-not-found' || e.code == 'wrong-password') {
         // Firebase는 ID가 아닌 이메일/비밀번호 불일치로 에러를 반환하므로,
         // 사용자에게는 일반적인 메시지를 제공하는 것이 좋습니다.
@@ -192,6 +193,7 @@ class UserDataProvider extends ChangeNotifier {
       return ValidationResult.failure('로그인 오류: ${e.message}');
     } catch (e) {
       // 기타 예상치 못한 오류 처리
+      print('E/flutter: [Login] 알 수 없는 오류 발생: $e'); // 상세 로그 추가
       return ValidationResult.failure('알 수 없는 오류 발생: $e');
     }
   }
@@ -216,6 +218,32 @@ class UserDataProvider extends ChangeNotifier {
       print('ID 중복 확인 중 오류 발생: $e');
       return true; // 오류 발생 시 안전하게 중복으로 간주 (또는 다른 오류 처리)
     }
+  }
+
+  Future<void> reloadAndCheckEmailVerification() async {
+    User? user = _auth.currentUser;
+    if (user != null) {
+      print('I/flutter: [EmailVerifyCheck] reload 전: ${user.emailVerified}');
+      await user.reload(); // Firebase 서버에서 최신 사용자 정보를 가져옵니다.
+      user = _auth.currentUser; // reload() 후에는 _auth.currentUser를 다시 가져와야 최신 정보가 반영됩니다.
+      if (user != null) {
+        print('I/flutter: [EmailVerifyCheck] reload 후: ${user.emailVerified}');
+        if (user.emailVerified) {
+          print('I/flutter: [EmailVerifyCheck] 이메일이 성공적으로 인증되었습니다. 이제 이메일 인증 필요 없음.');
+          // 사용자에게 이메일 인증이 완료되었음을 알리는 스낵바 또는 UI 변경
+          // (예: showSnackBarMessage(context, '이메일 인증이 완료되었습니다!'))
+          // 필요하다면 UI 업데이트를 위해 notifyListeners() 호출 (이미 되어 있을 것임)
+        } else {
+          print('I/flutter: [EmailVerifyCheck] 이메일이 아직 인증되지 않았습니다. 다시 시도해주세요.');
+          // 사용자에게 아직 인증되지 않았음을 알림
+        }
+      } else {
+        print('W/flutter: [EmailVerifyCheck] reload 후 user가 null이 됨. (로그아웃되었을 수 있음)');
+      }
+    } else {
+      print('W/flutter: [EmailVerifyCheck] 현재 로그인된 user가 없음. (로그인 필요)');
+    }
+    notifyListeners(); // UI 업데이트를 위해 호출
   }
 
   /// **비밀번호 재설정 이메일 전송 함수**
@@ -284,10 +312,10 @@ class UserDataProvider extends ChangeNotifier {
       // 2. Firebase Authentication의 verifyBeforeUpdateEmail을 사용하여 이메일 변경 시도
       //    이메일 확인 후 변경이 이루어집니다.
       //    이 호출은 확인 메일을 보내는 역할만 하며, 실제 Firebase Auth의 이메일은 아직 변경되지 않습니다.
-      print('I/flutter: [EmailChange] 이메일 변경 확인 메일 발송 시도: $newEmail');
+      print('I/flutter: [EmailChange] E메일 변경 확인 메일 발송 시도: $newEmail');
       await user.verifyBeforeUpdateEmail(newEmail);
       // 이메일 변경은 사용자에게 확인 이메일을 보낸 후 적용됩니다.
-      print('I/flutter: [EmailChange] 이메일 변경 확인 메일 발송 요청 성공');
+      print('I/flutter: [EmailChange] E메일 변경 확인 메일 발송 요청 성공');
       return ValidationResult.success('새 E메일 주소로 확인 링크를 보냈습니다. 링크를 클릭하여 이메일 변경을 완료해주세요.');
     } on FirebaseAuthException catch (e) {
       // Firebase Authentication 관련 오류 처리

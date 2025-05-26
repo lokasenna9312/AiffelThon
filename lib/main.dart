@@ -78,20 +78,21 @@ class _MainPageState extends State<MainPage> {
       userDataProvider: userDataProvider,
     );
 
-    if (result.isSuccess) {
-      // 로그인 성공 시
-      showSnackBarMessage(context, result.message); // ValidationResult에서 반환된 메시지 사용
-      Navigator.pushAndRemoveUntil(
-        context,
-        MaterialPageRoute(
-          builder: (context) => HomePage(title: widget.title), // 로그인 성공 후 이동할 메인 페이지
-        ),
-        (Route<dynamic> route) => false, // 모든 이전 라우트 제거
-      );
-    } else {
-      // 로그인 실패 시
-      showSnackBarMessage(context, result.message); // ValidationResult에서 반환된 실패 메시지 사용
+    print('I/flutter: [LoginProcess] 로그인 결과 isSuccess: ${result.isSuccess}, 메시지: ${result.message}');
+
+    if (!result.isSuccess) {
+      showSnackBarMessage(
+          context, result.message); // ValidationResult에서 반환된 메시지 사용
+      return;
     }
+
+    showSnackBarMessage(context, result.message); // ValidationResult에서 반환된 실패 메시지 사용
+
+    Navigator.pushAndRemoveUntil(
+      context,
+      MaterialPageRoute(builder: (context) => HomePage(title: widget.title)), // 로그인 성공 후 이동할 메인 페이지
+          (Route<dynamic> route) => false,
+    );
   }
 
   @override
