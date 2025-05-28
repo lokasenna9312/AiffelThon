@@ -13,6 +13,7 @@ android {
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
+        isCoreLibraryDesugaringEnabled = true
     }
 
     kotlinOptions {
@@ -53,4 +54,7 @@ dependencies {
 
     // 기존에 있던 다른 종속성들도 유지해야 합니다.
     // 예를 들어 Flutter 프로젝트라면 Flutter 관련 종속성이 있을 수 있습니다.
+
+    // 코어 라이브러리 디슈가링 의존성 추가
+    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.5") // 또는 최신 안정 버전
 }

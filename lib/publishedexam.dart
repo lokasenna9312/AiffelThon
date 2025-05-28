@@ -377,7 +377,7 @@ class _PublishedExamPageState extends State<PublishedExamPage> {
                       '문제 ${mainquestionNo ?? '번호 없음'} (${mainquestionType})',
                       style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
                     ),
-                    subtitle: Text(mainQuestionText, maxLines: 2, overflow: TextOverflow.ellipsis),
+                    subtitle: Text(mainQuestionText),
                     children: <Widget>[
                       // 주 문제의 상세 내용 (필요하다면)
                       Padding(
