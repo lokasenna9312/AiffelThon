@@ -42,3 +42,15 @@ android {
 flutter {
     source = "../.."
 }
+
+dependencies {
+    implementation(platform("com.google.firebase:firebase-bom:33.14.0")) // 예시: 특정 BoM 버전 사용 권장
+    implementation("com.google.firebase:firebase-analytics-ktx")
+    implementation("com.google.firebase:firebase-auth-ktx")
+    implementation("com.google.firebase:firebase-firestore-ktx")
+    implementation("com.google.android.gms:play-services-base:18.7.0")
+    // implementation("com.google.android.gms:play-services-location:21.2.0") // 필요하다면 추가
+
+    // 기존에 있던 다른 종속성들도 유지해야 합니다.
+    // 예를 들어 Flutter 프로젝트라면 Flutter 관련 종속성이 있을 수 있습니다.
+}

@@ -19,3 +19,9 @@ subprojects {
 tasks.register<Delete>("clean") {
     delete(rootProject.layout.buildDirectory)
 }
+
+plugins {
+    id("com.android.application") apply false // 또는 id("com.android.library") apply false
+    id("org.jetbrains.kotlin.android") apply false // 또는 id("kotlin-android") apply false
+    id("com.google.gms.google-services") apply false // <-- 이 라인을 추가하거나 확인합니다. 버전은 최신으로 유지합니다.
+}

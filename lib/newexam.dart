@@ -4,15 +4,21 @@ import 'publishedexam.dart';
 import 'qbank.dart';
 import 'appbar.dart';
 
-class NewExamPage extends StatelessWidget {
+class NewExamPage extends StatefulWidget {
   final String title; // 이전 페이지 제목을 받을 변수
 
   const NewExamPage({super.key, required this.title});
 
   @override
+  State<NewExamPage> createState() => _NewExamPageState();
+}
+
+class _NewExamPageState extends State<NewExamPage> {
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: CSAppBar(title: title),
+      appBar: CSAppBar(title: widget.title),
       body: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
@@ -22,7 +28,7 @@ class NewExamPage extends StatelessWidget {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) => PublishedExam(title: title),
+                  builder: (context) => PublishedExamPage(title: widget.title),
                 ),
               );
             },
@@ -34,7 +40,7 @@ class NewExamPage extends StatelessWidget {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) => QuestionBank(title: title),
+                  builder: (context) => QuestionBank(title: widget.title),
                 ),
               );
             },
