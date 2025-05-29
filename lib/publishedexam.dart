@@ -355,63 +355,110 @@ class _PublishedExamPageState extends State<PublishedExamPage> {
                 : ListView.builder(
               itemCount: _questions.length,
               itemBuilder: (context, index) {
-                final mainquestion = _questions[index]; // 이제 _questions는 주 문제만 가지고 있음
+                final mainquestion = _questions[index];
                 final String? mainquestionNo = mainquestion['no'] as String?;
                 final String mainQuestionText = mainquestion['question'] as String? ?? '내용 없음';
-                final String? mainAnswerText = mainquestion['answer'] as String?; // 주 문제의 정답
+                final String? mainAnswerText = mainquestion['answer'] as String?;
                 final String mainquestionType = mainquestion['type'] as String? ?? '타입 정보 없음';
 
-                // sub_questions 리스트 가져오기
-                final List<dynamic> subQuestionsRaw = mainquestion['sub_questions'] as List<dynamic>? ?? [];
-                final List<Map<String, dynamic>> subQuestions = subQuestionsRaw
-                    .whereType<Map<String, dynamic>>() // Map<String, dynamic> 타입만 필터링
-                    .map((sq) => Map<String, dynamic>.from(sq)) // 명시적 캐스팅
-                    .toList();
+                // sub_questions 맵 가져오기 및 UI용 리스트로 변환
+                final dynamic subQuestionsField = mainquestion['sub_questions'];
+                List<Map<String, dynamic>> subQuestionsForDisplay = [];
+                if (subQuestionsField is Map<String, dynamic>) {
+                  Map<String, dynamic> subQuestionsMap = subQuestionsField;
+                  List<String> sortedSubKeys = subQuestionsMap.keys.toList();
+                  sortedSubKeys.sort((a, b) =>
+                      (int.tryParse(a) ?? 99999).compareTo(int.tryParse(b) ?? 99999));
+                  for (String subKey in sortedSubKeys) {
+                    final dynamic subQuestionValue = subQuestionsMap[subKey];
+                    if (subQuestionValue is Map<String, dynamic>) {
+                      subQuestionsForDisplay.add(Map<String, dynamic>.from(subQuestionValue));
+                    }
+                  }
+                } else if (subQuestionsField != null) {
+                  print("경고: mainquestion['no'] = ${mainquestion['no']}의 sub_questions 필드가 Map이 아닙니다. 타입: ${subQuestionsField.runtimeType}");
+                }
 
-                // ExpansionTile을 사용하여 주 문제와 하위 문제 표시
                 return Card(
                   margin: const EdgeInsets.symmetric(vertical: 6.0, horizontal: 8.0),
                   child: ExpansionTile(
-                    key: PageStorageKey(mainquestionNo), // 스크롤 상태 유지를 위해 Key 사용
+                    key: PageStorageKey(mainquestionNo),
                     title: Text(
                       '문제 ${mainquestionNo ?? '번호 없음'} (${mainquestionType})',
                       style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
                     ),
-                    subtitle: Text(mainQuestionText),
+                    subtitle: Text(mainQuestionText, textAlign: TextAlign.start), // 부제목도 왼쪽 정렬 명시
+                    // ExpansionTile 내부 children의 기본 패딩을 제거하여 직접 제어
+                    childrenPadding: EdgeInsets.zero,
+                    // tilePadding도 필요에 따라 조정 (기본값은 horizontal: 16.0)
+                    // tilePadding: EdgeInsets.zero, // 제목 부분의 패딩도 제거하려면
+
                     children: <Widget>[
-                      // 주 문제의 상세 내용 (필요하다면)
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+                      // 모든 children 내용을 하나의 Column으로 감싸고 왼쪽 정렬 및 일관된 패딩 적용
+                      Container( // 전체 children 영역에 일관된 왼쪽 패딩 적용
+                        padding: const EdgeInsets.only(left: 16.0, right: 16.0, bottom: 8.0, top: 8.0), // 상단 패딩도 추가
+                        width: double.infinity, // Column이 가로 전체 너비를 차지하도록
                         child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
+                          crossAxisAlignment: CrossAxisAlignment.start, // 이 Column의 자식들을 모두 왼쪽 정렬
                           children: [
+                            // 주 문제의 정답 표시 (발문이 아니고 정답이 있을 경우)
                             if (mainquestionType != "발문" && mainAnswerText != null)
-                              Text('정답: $mainAnswerText', style: const TextStyle(color: Colors.green)),
-                            // 여기에 주 문제의 더 자세한 내용을 넣을 수 있습니다.
+                              Padding(
+                                padding: const EdgeInsets.symmetric(vertical: 4.0), // 정답 위아래 간격
+                                child: Text(
+                                  '정답: $mainAnswerText',
+                                  style: const TextStyle(color: Colors.green, fontWeight: FontWeight.w500),
+                                  textAlign: TextAlign.start, // 명시적 왼쪽 정렬
+                                ),
+                              ),
+
+                            // 구분선 (주 문제 정답과 하위 문제 사이, 필요하다면)
+                            if ((mainquestionType != "발문" && mainAnswerText != null) && subQuestionsForDisplay.isNotEmpty)
+                              const Divider(height: 16.0),
+
+                            // 하위 문제들 표시
+                            if (subQuestionsForDisplay.isNotEmpty)
+                              ...subQuestionsForDisplay.map((subquestion) { // ... (spread operator) 사용하여 위젯 리스트 바로 삽입
+                                final String? subNo = subquestion['no'] as String?;
+                                final String subQuestionText = subquestion['question'] as String? ?? '내용 없음';
+                                final String? subAnswer = subquestion['answer'] as String?;
+                                final String subType = subquestion['type'] as String? ?? '타입 정보 없음';
+
+                                String displaySubNo = subNo ?? "";
+                                if (subNo != null && subNo.contains("_")) {
+                                  displaySubNo = "(${subNo.split('_').last})";
+                                } else if (subNo != null) {
+                                  displaySubNo = "($subNo)";
+                                }
+
+                                return Padding(
+                                  padding: const EdgeInsets.symmetric(vertical: 6.0), // 각 하위 문제 항목 간 간격
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start, // 하위 문제 내용 왼쪽 정렬
+                                    children: [
+                                      Text(
+                                        '${displaySubNo} ${subQuestionText}',
+                                        style: const TextStyle(fontSize: 15),
+                                        textAlign: TextAlign.start, // 명시적 왼쪽 정렬
+                                      ),
+                                      if (subAnswer != null && subType != "발문") ...[
+                                        const SizedBox(height: 4),
+                                        Padding( // 정답 텍스트에만 약간의 왼쪽 추가 들여쓰기 (선택적)
+                                          padding: const EdgeInsets.only(left: 8.0),
+                                          child: Text(
+                                            '정답: $subAnswer',
+                                            style: const TextStyle(color: Colors.green, fontSize: 14),
+                                            textAlign: TextAlign.start, // 명시적 왼쪽 정렬
+                                          ),
+                                        ),
+                                      ]
+                                    ],
+                                  ),
+                                );
+                              }).toList(), // map의 결과를 리스트로 변환
                           ],
                         ),
                       ),
-                      // 하위 문제들 표시
-                      if (subQuestions.isNotEmpty)
-                        Padding(
-                          padding: const EdgeInsets.only(left: 16.0, right: 16.0, bottom: 8.0), // 하위 문제 영역 패딩
-                          child: Column(
-                            children: subQuestions.map((subquestion) {
-                              final String? subNo = subquestion['no'] as String?;
-                              final String subQuestionText = subquestion['question'] as String? ?? '내용 없음';
-                              final String? subAnswer = subquestion['answer'] as String?;
-                              final String subType = subquestion['type'] as String? ?? '타입 정보 없음';
-                              return ListTile( // 각 하위 문제를 ListTile 등으로 표시
-                                contentPadding: const EdgeInsets.only(left: 16.0), // 하위 문제 들여쓰기
-                                title: Text('${subNo ?? ""} ${subQuestionText}', style: const TextStyle(fontSize: 15)),
-                                subtitle: (subAnswer != null && subType != "발문")
-                                    ? Text('정답: $subAnswer', style: const TextStyle(color: Colors.green, fontSize: 14))
-                                    : null,
-                                // 여기에 각 하위 문제 클릭 시 동작 등을 추가할 수 있습니다.
-                              );
-                            }).toList(),
-                          ),
-                        ),
                     ],
                   ),
                 );
