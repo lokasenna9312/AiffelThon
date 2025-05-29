@@ -431,6 +431,28 @@ class _PublishedExamPageState extends State<PublishedExamPage> {
                                   displaySubNo = "($subNo)";
                                 }
 
+                                // --- 하위-하위 문제 (sub_sub_questions) 처리 시작 ---
+                                final dynamic subSubQuestionsField = subquestion['sub_sub_questions']; // 1. subquestion에서 sub_sub_questions 필드를 가져옵니다.
+                                List<Map<String, dynamic>> subSubQuestionsForDisplay = [];
+
+                                if (subSubQuestionsField is Map<String, dynamic>) { // 2. 타입이 Map인지 확인합니다.
+                                  Map<String, dynamic> subSubQuestionsMap = subSubQuestionsField;
+                                  List<String> sortedSubSubKeys = subSubQuestionsMap.keys.toList();
+                                  // 3. 키 정렬 (필요시)
+                                  sortedSubSubKeys.sort((a, b) =>
+                                      (int.tryParse(a) ?? 99999).compareTo(int.tryParse(b) ?? 99999));
+
+                                  for (String subSubKey in sortedSubSubKeys) { // 4. 맵의 각 항목을 순회합니다.
+                                    final dynamic subSubQuestionValue = subSubQuestionsMap[subSubKey];
+                                    if (subSubQuestionValue is Map<String, dynamic>) {
+                                      subSubQuestionsForDisplay.add(Map<String, dynamic>.from(subSubQuestionValue)); // 5. UI용 리스트에 추가
+                                    }
+                                  }
+                                } else if (subSubQuestionsField != null) {
+                                  // Firestore에 Map이 아닌 다른 타입으로 저장되었거나, 앱 코드의 다른 부분에서 타입이 변경된 경우
+                                  print("경고: subquestion['no'] = ${subquestion['no']}의 sub_sub_questions 필드가 Map이 아닙니다. 타입: ${subSubQuestionsField.runtimeType}");
+                                }
+
                                 return Padding(
                                   padding: const EdgeInsets.symmetric(vertical: 6.0), // 각 하위 문제 항목 간 간격
                                   child: Column(
@@ -451,7 +473,52 @@ class _PublishedExamPageState extends State<PublishedExamPage> {
                                             textAlign: TextAlign.start, // 명시적 왼쪽 정렬
                                           ),
                                         ),
-                                      ]
+                                      ],
+                                      if (subSubQuestionsForDisplay.isNotEmpty)
+                                        Padding(
+                                          padding: const EdgeInsets.only(left: 16.0, top: 6.0), // 하위-하위 문제 들여쓰기
+                                          child: Column(
+                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                            children: subSubQuestionsForDisplay.map((subSubQ) {
+                                              final String? ssqNo = subSubQ['no'] as String?;
+                                              final String ssqQuestionText = subSubQ['question'] as String? ?? '내용 없음';
+                                              final String? ssqAnswer = subSubQ['answer'] as String?;
+                                              final String ssqType = subSubQ['type'] as String? ?? '타입 정보 없음';
+
+                                              String displaySsqNo = ssqNo ?? "";
+                                              if (ssqNo != null && ssqNo.split('_').length >= 3) { // "n_m_k"
+                                                displaySsqNo = "(${ssqNo.split('_').last})"; // (k)
+                                              } else if (ssqNo != null) {
+                                                displaySsqNo = "($ssqNo)"; // 예상치 못한 형식 대비
+                                              }
+
+                                              return Padding(
+                                                padding: const EdgeInsets.symmetric(vertical: 3.0),
+                                                child: Column(
+                                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                                  children: [
+                                                    Text(
+                                                      '${displaySsqNo} ${ssqQuestionText}',
+                                                      style: TextStyle(fontSize: 14, color: Colors.grey.shade800),
+                                                      textAlign: TextAlign.start,
+                                                    ),
+                                                    if (ssqAnswer != null && ssqType != "발문") ...[
+                                                      const SizedBox(height: 2),
+                                                      Padding(
+                                                        padding: const EdgeInsets.only(left: 8.0), // 정답 들여쓰기
+                                                        child: Text(
+                                                          '정답: $ssqAnswer',
+                                                          style: TextStyle(color: Colors.green.shade600, fontSize: 13),
+                                                          textAlign: TextAlign.start,
+                                                        ),
+                                                      ),
+                                                    ]
+                                                  ],
+                                                ),
+                                              );
+                                            }).toList(),
+                                          ),
+                                        ),
                                     ],
                                   ),
                                 );
