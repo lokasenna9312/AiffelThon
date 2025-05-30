@@ -269,82 +269,82 @@ class _PublishedExamPageState extends State<PublishedExamPage> {
           else if (_yearOptions.isEmpty && _errorMessage.isNotEmpty)
             Center(child: Text(_errorMessage, style: const TextStyle(color: Colors.red)))
           else ...[
-            // 년도 선택 드롭다운
-            DropdownButtonFormField<String>(
-              decoration: const InputDecoration(labelText: '시행년도', border: OutlineInputBorder()),
-              value: _selectedYear,
-              hint: const Text('년도 선택'),
-              items: _yearOptions.map((String value) {
-                return DropdownMenuItem<String>(
-                  value: value,
-                  child: Text(value),
-                );
-              }).toList(),
-              onChanged: _updateRoundOptions, // 년도 변경 시 회차 옵션 업데이트
-              disabledHint: _isLoadingOptions ? const Text("옵션 로딩 중...") : null,
-            ),
-            const SizedBox(height: 12),
+              // 년도 선택 드롭다운
+              DropdownButtonFormField<String>(
+                decoration: const InputDecoration(labelText: '시행년도', border: OutlineInputBorder()),
+                value: _selectedYear,
+                hint: const Text('년도 선택'),
+                items: _yearOptions.map((String value) {
+                  return DropdownMenuItem<String>(
+                    value: value,
+                    child: Text(value),
+                  );
+                }).toList(),
+                onChanged: _updateRoundOptions, // 년도 변경 시 회차 옵션 업데이트
+                disabledHint: _isLoadingOptions ? const Text("옵션 로딩 중...") : null,
+              ),
+              const SizedBox(height: 12),
 
-            // 회차 선택 드롭다운
-            DropdownButtonFormField<String>(
-              decoration: const InputDecoration(labelText: '회차', border: OutlineInputBorder()),
-              value: _selectedRound,
-              hint: const Text('회차 선택'),
-              items: _filteredRoundOptions.map((String value) { // 필터링된 회차 옵션 사용
-                return DropdownMenuItem<String>(
-                  value: value,
-                  child: Text(value),
-                );
-              }).toList(),
-              onChanged: (_selectedYear == null) ? null : _updateGradeOptions, // 년도가 선택되어야 활성화
-              disabledHint: _selectedYear == null ? const Text("년도를 먼저 선택하세요") : null,
-            ),
-            const SizedBox(height: 12),
+              // 회차 선택 드롭다운
+              DropdownButtonFormField<String>(
+                decoration: const InputDecoration(labelText: '회차', border: OutlineInputBorder()),
+                value: _selectedRound,
+                hint: const Text('회차 선택'),
+                items: _filteredRoundOptions.map((String value) { // 필터링된 회차 옵션 사용
+                  return DropdownMenuItem<String>(
+                    value: value,
+                    child: Text(value),
+                  );
+                }).toList(),
+                onChanged: (_selectedYear == null) ? null : _updateGradeOptions, // 년도가 선택되어야 활성화
+                disabledHint: _selectedYear == null ? const Text("년도를 먼저 선택하세요") : null,
+              ),
+              const SizedBox(height: 12),
 
-            // 등급 선택 드롭다운
-            DropdownButtonFormField<String>(
-              decoration: const InputDecoration(labelText: '등급', border: OutlineInputBorder()),
-              value: _selectedGrade,
-              hint: const Text('등급 선택'),
-              items: _filteredGradeOptions.map((String value) { // 필터링된 등급 옵션 사용
-                return DropdownMenuItem<String>(
-                  value: value,
-                  child: Text(value),
-                );
-              }).toList(),
-              onChanged: (_selectedRound == null) ? null : (String? newValue) {
-                setState(() {
-                  _selectedGrade = newValue;
-                  _questions = []; // 등급 변경 시 문제 목록 초기화
-                });
-              },
-              disabledHint: _selectedRound == null ? const Text("회차를 먼저 선택하세요") : null,
-            ),
-            const SizedBox(height: 20),
+              // 등급 선택 드롭다운
+              DropdownButtonFormField<String>(
+                decoration: const InputDecoration(labelText: '등급', border: OutlineInputBorder()),
+                value: _selectedGrade,
+                hint: const Text('등급 선택'),
+                items: _filteredGradeOptions.map((String value) { // 필터링된 등급 옵션 사용
+                  return DropdownMenuItem<String>(
+                    value: value,
+                    child: Text(value),
+                  );
+                }).toList(),
+                onChanged: (_selectedRound == null) ? null : (String? newValue) {
+                  setState(() {
+                    _selectedGrade = newValue;
+                    _questions = []; // 등급 변경 시 문제 목록 초기화
+                  });
+                },
+                disabledHint: _selectedRound == null ? const Text("회차를 먼저 선택하세요") : null,
+              ),
+              const SizedBox(height: 20),
 
-            // 문제 불러오기 버튼
-            ElevatedButton(
-              onPressed: (_selectedYear == null || _selectedRound == null || _selectedGrade == null || _isLoadingquestions)
-                  ? null // 모든 항목이 선택되지 않았거나, 문제 로딩 중이면 비활성화
-                  : _fetchquestions,
-              style: ElevatedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 16)),
-              child: _isLoadingquestions
-                  ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 3, color: Colors.white))
-                  : const Text('문제 불러오기', style: TextStyle(fontSize: 16)),
-            ),
-          ],
-        const SizedBox(height: 20),
+              // 문제 불러오기 버튼
+              ElevatedButton(
+                onPressed: (_selectedYear == null || _selectedRound == null || _selectedGrade == null || _isLoadingquestions)
+                    ? null // 모든 항목이 선택되지 않았거나, 문제 로딩 중이면 비활성화
+                    : _fetchquestions,
+                style: ElevatedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 16)),
+                child: _isLoadingquestions
+                    ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 3, color: Colors.white))
+                    : const Text('문제 불러오기', style: TextStyle(fontSize: 16)),
+              ),
+            ],
+          const SizedBox(height: 20),
 
-        // 오류 메시지 표시
-        if (_errorMessage.isNotEmpty && !_isLoadingOptions) // 옵션 로딩 중 오류는 위에서 처리
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 8.0),
-            child: Text(
-              _errorMessage,
-              style: const TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
-              textAlign: TextAlign.center,
+          // 오류 메시지 표시
+          if (_errorMessage.isNotEmpty && !_isLoadingOptions) // 옵션 로딩 중 오류는 위에서 처리
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 8.0),
+              child: Text(
+                _errorMessage,
+                style: const TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
+                textAlign: TextAlign.center,
+              ),
             ),
-          ),
 
           // 문제 목록 표시
           Expanded(
@@ -355,11 +355,16 @@ class _PublishedExamPageState extends State<PublishedExamPage> {
                 : ListView.builder(
               itemCount: _questions.length,
               itemBuilder: (context, index) {
+                String mainquestionType;
                 final mainquestion = _questions[index];
                 final String? mainquestionNo = mainquestion['no'] as String?;
                 final String mainQuestionText = mainquestion['question'] as String? ?? '내용 없음';
                 final String? mainAnswerText = mainquestion['answer'] as String?;
-                final String mainquestionType = mainquestion['type'] as String? ?? '타입 정보 없음';
+                if(mainquestion['type'] != "발문") {
+                  mainquestionType = mainquestion['type'] as String? ?? '타입 정보 없음';
+                } else {
+                  mainquestionType = "";
+                }
 
                 // sub_questions 맵 가져오기 및 UI용 리스트로 변환
                 final dynamic subQuestionsField = mainquestion['sub_questions'];
@@ -382,9 +387,11 @@ class _PublishedExamPageState extends State<PublishedExamPage> {
                 return Card(
                   margin: const EdgeInsets.symmetric(vertical: 6.0, horizontal: 8.0),
                   child: ExpansionTile(
-                    key: PageStorageKey(mainquestionNo),
+                    key: PageStorageKey(mainquestionNo ?? 'main_q_$index'),
                     title: Text(
-                      '문제 ${mainquestionNo ?? '번호 없음'} (${mainquestionType})',
+                      mainquestionType.isNotEmpty
+                          ? '문제 ${mainquestionNo ?? '번호 없음'} (${mainquestionType})'
+                          : '문제 ${mainquestionNo ?? '번호 없음'}', // 타입이 "발문"이면 타입 정보 생략
                       style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
                     ),
                     subtitle: Text(mainQuestionText, textAlign: TextAlign.start), // 부제목도 왼쪽 정렬 명시
@@ -419,10 +426,15 @@ class _PublishedExamPageState extends State<PublishedExamPage> {
                             // 하위 문제들 표시
                             if (subQuestionsForDisplay.isNotEmpty)
                               ...subQuestionsForDisplay.map((subquestion) { // ... (spread operator) 사용하여 위젯 리스트 바로 삽입
+                                String subType;
                                 final String? subNo = subquestion['no'] as String?;
                                 final String subQuestionText = subquestion['question'] as String? ?? '내용 없음';
                                 final String? subAnswer = subquestion['answer'] as String?;
-                                final String subType = subquestion['type'] as String? ?? '타입 정보 없음';
+                                if(subquestion['type'] != "발문") {
+                                  subType = subquestion['type'] as String? ?? '타입 정보 없음';
+                                } else {
+                                  subType = "";
+                                }
 
                                 String displaySubNo = subNo ?? "";
                                 if (subNo != null && subNo.contains("_")) {
@@ -459,7 +471,9 @@ class _PublishedExamPageState extends State<PublishedExamPage> {
                                     crossAxisAlignment: CrossAxisAlignment.start, // 하위 문제 내용 왼쪽 정렬
                                     children: [
                                       Text(
-                                        '${displaySubNo} ${subQuestionText}',
+                                        subType.isNotEmpty
+                                          ? '${displaySubNo} ${subQuestionText} (${subType})'
+                                          :'${displaySubNo} ${subQuestionText}',
                                         style: const TextStyle(fontSize: 15),
                                         textAlign: TextAlign.start, // 명시적 왼쪽 정렬
                                       ),
@@ -480,10 +494,15 @@ class _PublishedExamPageState extends State<PublishedExamPage> {
                                           child: Column(
                                             crossAxisAlignment: CrossAxisAlignment.start,
                                             children: subSubQuestionsForDisplay.map((subSubQ) {
+                                              String ssqType;
                                               final String? ssqNo = subSubQ['no'] as String?;
                                               final String ssqQuestionText = subSubQ['question'] as String? ?? '내용 없음';
                                               final String? ssqAnswer = subSubQ['answer'] as String?;
-                                              final String ssqType = subSubQ['type'] as String? ?? '타입 정보 없음';
+                                              if(subSubQ['type'] != "발문") {
+                                                ssqType = subSubQ['type'] as String? ?? '타입 정보 없음';
+                                              } else {
+                                                ssqType = "";
+                                              }
 
                                               String displaySsqNo = ssqNo ?? "";
                                               if (ssqNo != null && ssqNo.split('_').length >= 3) { // "n_m_k"
@@ -498,7 +517,9 @@ class _PublishedExamPageState extends State<PublishedExamPage> {
                                                   crossAxisAlignment: CrossAxisAlignment.start,
                                                   children: [
                                                     Text(
-                                                      '${displaySsqNo} ${ssqQuestionText}',
+                                                      ssqType.isNotEmpty
+                                                          ? '문제 ${displaySsqNo} ${ssqQuestionText} (${ssqType})'
+                                                          : '문제 ${displaySsqNo} ${ssqQuestionText}', // 타입이 "발문"이면 타입 정보 생략
                                                       style: TextStyle(fontSize: 14, color: Colors.grey.shade800),
                                                       textAlign: TextAlign.start,
                                                     ),
