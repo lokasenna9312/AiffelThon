@@ -40,7 +40,7 @@ class _NewExamPageState extends State<NewExamPage> {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) => QuestionBank(title: widget.title),
+                  builder: (context) => QuestionBankPage(title: widget.title),
                 ),
               );
             },
