@@ -472,7 +472,7 @@ class _PublishedExamPageState extends State<PublishedExamPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       // AppBar 제목을 페이지 기능에 맞게 변경 가능 (예: "기출문제 Q-Bank")
-      appBar: CSAppBar(title: "기출문제 Q-Bank"),
+      appBar: CSAppBar(title: widget.title),
       body: Column(
         children: [
           // --- 상단 컨트롤 UI 변경 ---
@@ -639,7 +639,7 @@ class _PublishedExamPageState extends State<PublishedExamPage> {
                                         _buildQuestionInteractiveDisplay(
                                           questionData: Map<String, dynamic>.from(subSubQValue),
                                           leftIndent: 32.0,
-                                          displayNoWithPrefix: "  ㄴ $subSubQDisplayNo",
+                                          displayNoWithPrefix: " - $subSubQDisplayNo",
                                           questionTypeToDisplay: subSubTypeDisplay, // 각 하위-하위 문제 타입 전달
                                           showQuestionText: true, // 하위-하위 문제도 본문과 타입 표시
                                         )

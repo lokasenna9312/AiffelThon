@@ -568,7 +568,7 @@ class _QuestionBankPageState extends State<QuestionBankPage> {
                                         _buildQuestionInteractiveDisplay(
                                           questionData: Map<String, dynamic>.from(subSubQValue),
                                           leftIndent: 32.0, // 하위-하위 문제 들여쓰기 (24 + 8)
-                                          displayNoWithPrefix: "- $subSubQDisplayNo",
+                                          displayNoWithPrefix: " - $subSubQDisplayNo",
                                           questionTypeToDisplay: subSubtitleTypeDisplay,
                                           showQuestionText: true,
                                         )
