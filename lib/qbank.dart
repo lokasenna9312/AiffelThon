@@ -236,69 +236,79 @@ class _QuestionBankPageState extends State<QuestionBankPage> {
 
   // 각 레벨의 문제를 그리는 재귀적 헬퍼 함수
   List<Widget> _buildQuestionHierarchyWidgets({
-    required Map<String, dynamic> questionData, // 현재 레벨의 문제 데이터
-    required double currentIndent,              // 현재 레벨의 들여쓰기
-    required String currentOrderPrefix,         // 현재 레벨의 문제 번호 접두사 (예: "1.", "(a)", "i)")
-    required bool showQuestionTextForThisLevel, // 현재 레벨에서 문제 텍스트를 표시할지 여부
+    required Map<String, dynamic> currentQuestionData,
+    required double currentIndent,
+    required String currentOrderPrefix, // 예: "1.", "(a)", "i)"
+    required int depth,
   }) {
     List<Widget> widgets = [];
-    final String? originalQuestionNo = questionData['no'] as String?; // Firestore 원본 no
-    final String questionType = questionData['type'] as String? ?? '타입 정보 없음';
+    final String questionType = currentQuestionData['type'] as String? ?? '';
+    final bool showActualQuestionText = depth > 0 || // 하위, 하위-하위는 질문 표시
+        (questionType != "발문" || currentQuestionData.containsKey('answer')); // 주 문제도 발문+답변없음 아니면 표시 (또는 풀이영역이므로 항상 false)
 
-    // 현재 레벨의 문제 항목 UI 추가 (TextField 등 인터랙티브 요소 포함)
+
+    // _buildQuestionInteractiveDisplay 호출 시 파라미터 전달
     widgets.add(_buildQuestionInteractiveDisplay(
-      questionData: questionData,
-      leftIndent: currentIndent,
-      displayNoWithPrefix: currentOrderPrefix, // 화면에 표시될 번호 (예: "1.", "(a)")
-      questionTypeToDisplay: (questionType == "발문") ? "" : " ($questionType)", // 발문이면 타입 숨김
-      showQuestionText: showQuestionTextForThisLevel, // 질문 텍스트 표시 여부
+      questionData: currentQuestionData,
+      leftIndent: currentIndent, // _buildQuestionHierarchyWidgets의 currentIndent가 여기에 매핑됨
+      displayNoWithPrefix: currentOrderPrefix, // currentOrderPrefix가 여기에 매핑됨
+      questionTypeToDisplay: (questionType == "발문" || questionType.isEmpty) ? "" : " ($questionType)", // 여기서 계산하여 전달
+      showQuestionText: showActualQuestionText, // 여기서 계산하여 전달
     ));
 
-    // 이 문제의 하위 문제들 (sub_questions) 처리
-    final dynamic subQuestionsField = questionData['sub_questions'];
-    if (subQuestionsField is Map<String, dynamic> && subQuestionsField.isNotEmpty) {
-      Map<String, dynamic> subQuestionsMap = subQuestionsField;
-      List<String> sortedSubKeys = subQuestionsMap.keys.toList();
-      sortedSubKeys.sort((a, b) => (int.tryParse(a) ?? 99999).compareTo(int.tryParse(b) ?? 99999));
+    // 하위 문제 처리 로직 (childrenKeyToUse 결정 및 재귀 호출)
+    String? childrenKey;
+    if (depth == 0) childrenKey = 'sub_questions';
+    else if (depth == 1) childrenKey = 'sub_sub_questions';
 
-      int subOrderCounter = 0;
-      for (String subKey in sortedSubKeys) {
-        final dynamic subQuestionValue = subQuestionsMap[subKey];
-        if (subQuestionValue is Map<String, dynamic>) {
-          subOrderCounter++;
-          // 하위 문제 번호 형식 (예: "(1)", "(2)")
-          String subQuestionOrderPrefix = "($subOrderCounter)";
-          widgets.addAll(_buildQuestionHierarchyWidgets( // 재귀 호출
-            questionData: Map<String, dynamic>.from(subQuestionValue),
-            currentIndent: currentIndent + 16.0, // 들여쓰기 증가
-            currentOrderPrefix: subQuestionOrderPrefix,
-            showQuestionTextForThisLevel: true, // 하위 레벨은 항상 질문 텍스트 표시
-          ));
+    if (childrenKey != null && currentQuestionData.containsKey(childrenKey)) {
+      final dynamic childrenField = currentQuestionData[childrenKey];
+      if (childrenField is Map<String, dynamic> && childrenField.isNotEmpty) {
+        Map<String, dynamic> childrenMap = childrenField;
+        List<String> sortedChildKeys = childrenMap.keys.toList();
+        sortedChildKeys.sort((a, b) => (int.tryParse(a) ?? 99999).compareTo(int.tryParse(b) ?? 99999));
+
+        int childOrderCounter = 0;
+        for (String childKeyInMap in sortedChildKeys) {
+          final dynamic childQuestionValue = childrenMap[childKeyInMap];
+          if (childQuestionValue is Map<String, dynamic>) {
+            childOrderCounter++;
+            String childDisplayOrderPrefix = "";
+            if (depth == 0) childDisplayOrderPrefix = "($childOrderCounter)";
+            else if (depth == 1) childDisplayOrderPrefix = "  ㄴ ($childOrderCounter)";
+
+            widgets.addAll(_buildQuestionHierarchyWidgets(
+              currentQuestionData: Map<String, dynamic>.from(childQuestionValue),
+              currentIndent: currentIndent + 8.0, // 다음 레벨 들여쓰기 (Padding 내부이므로 상대적)
+              currentOrderPrefix: childDisplayOrderPrefix,
+              depth: depth + 1,
+              // showQuestionTextForThisLevel: true, // 이 파라미터는 _buildQuestionHierarchyWidgets에만 필요
+            ));
+          }
         }
       }
     }
     return widgets;
   }
 
+
   // 단일 문제의 인터랙티브 UI (TextField, 정답확인 등)를 생성하는 위젯
   Widget _buildQuestionInteractiveDisplay({
     required Map<String, dynamic> questionData,
     required double leftIndent,
-    required String displayNoWithPrefix, // 예: "1.", "(1)", "ㄴ (a)" 등
-    required String questionTypeToDisplay, // 예: "(단답형)" 또는 "" (발문인 경우)
-    required bool showQuestionText, // 이 위젯 내에서 question 텍스트를 표시할지 여부
+    required String displayNoWithPrefix, // 예: "1.", "(1)", "ㄴ (a)" 등 (질문 텍스트는 여기서 포함 안 함)
+    required String questionTypeToDisplay,   // 예: " (단답형)", " (계산)", 또는 "" (발문이거나 타입 없는 경우)
+    required bool showQuestionText,          // 이 위젯 내에서 문제의 'question' 필드 내용을 표시할지 여부
   }) {
     final String? uniqueDisplayId = questionData['uniqueDisplayId'] as String?;
-    final String originalQuestionNo = questionData['no'] as String? ?? ''; // 디버깅/내부용
 
-    String questionTextForDisplay = "";
-    if (showQuestionText) { // 조건부로 질문 텍스트 구성
-      questionTextForDisplay = questionData['question'] as String? ?? '질문 없음';
-      // newline 처리는 _cleanNewlinesRecursive에서 이미 수행됨
+    String questionTextContent = "";
+    if (showQuestionText) {
+      questionTextContent = questionData['question'] as String? ?? '질문 내용 없음';
     }
 
-    String? correctAnswerForDisplay = questionData['answer'] as String?; // newline 처리됨
-    final String actualQuestionType = questionData['type'] as String? ?? '타입 정보 없음'; // isAnswerable 조건용
+    String? correctAnswerForDisplay = questionData['answer'] as String?;
+    final String actualQuestionType = questionData['type'] as String? ?? '타입 정보 없음';
 
     bool isAnswerable = (actualQuestionType == "단답형" || actualQuestionType == "계산" || actualQuestionType == "서술형") &&
         correctAnswerForDisplay != null &&
@@ -313,19 +323,33 @@ class _QuestionBankPageState extends State<QuestionBankPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          if (showQuestionText) // 조건부 질문 텍스트 표시
+          // 1. e질문 텍스트 표시 (showQuestionTxt 플래그에 따라)
+          if (showQuestionText)
             Text(
-              '$displayNoWithPrefix ${questionTextForDisplay}${questionTypeToDisplay}',
+              '$displayNoWithPrefix ${questionTextContent}${questionTypeToDisplay}',
+              textAlign: TextAlign.start,
               style: TextStyle(
                 fontSize: 15,
                 fontWeight: leftIndent == 0 && showQuestionText ? FontWeight.w600 : (leftIndent < 24.0 ? FontWeight.w500 : FontWeight.normal),
               ),
+            )
+          else if (displayNoWithPrefix.isNotEmpty) // showQuestionText가 false여도, 접두사("└ (풀이)" 등)가 있다면 표시
+            Padding(
+              padding: EdgeInsets.only(bottom: (isAnswerable ? 4.0 : 0)), // 답변 UI가 바로 나오면 간격, 아니면 0
+              child: Text(
+                displayNoWithPrefix,
+                style: TextStyle(fontSize: 15, fontWeight: FontWeight.w500, color: Colors.blueGrey[700]),
+              ),
             ),
-          if (showQuestionText && isAnswerable) const SizedBox(height: 8), // 질문과 TextField 사이 간격
 
+          // 질문 텍스트와 답변 UI 사이 간격 (둘 다 표시될 경우)
+          if (showQuestionText && isAnswerable)
+            const SizedBox(height: 8.0),
+
+          // 2. 답변 가능 문제에 대한 UI (TextField, 버튼, 피드백)
           if (isAnswerable && controller != null && correctAnswerForDisplay != null) ...[
-            // ... TextField, 버튼, 피드백 UI (이전 _buildProblemInteractiveEntry와 동일, 변수명만 question으로) ...
-            TextField( /* ... 이전과 동일 ... */
+            const SizedBox(height: 4), // 풀이 제목과 TextField 사이 간격 (showQuestionText가 false일 때를 위함)
+            TextField(
               controller: controller,
               enabled: currentSubmissionStatus == null,
               decoration: InputDecoration(
@@ -339,8 +363,8 @@ class _QuestionBankPageState extends State<QuestionBankPage> {
               ),
               onChanged: (text) { if (currentSubmissionStatus == null && mounted) setState(() {}); },
               onSubmitted: (value) {
-                if (currentSubmissionStatus == null) {
-                  _checkAnswer(uniqueDisplayId!, correctAnswerForDisplay, actualQuestionType);
+                if (currentSubmissionStatus == null && uniqueDisplayId != null && correctAnswerForDisplay != null) {
+                  _checkAnswer(uniqueDisplayId, correctAnswerForDisplay, actualQuestionType);
                 }
               },
               maxLines: actualQuestionType == "서술형" ? null : 1,
@@ -348,20 +372,22 @@ class _QuestionBankPageState extends State<QuestionBankPage> {
             ),
             const SizedBox(height: 8),
             Row(
+              mainAxisAlignment: MainAxisAlignment.start,
               children: [
                 ElevatedButton(
-                  onPressed: currentSubmissionStatus == null
-                      ? () { FocusScope.of(context).unfocus(); _checkAnswer(uniqueDisplayId!, correctAnswerForDisplay, actualQuestionType); }
+                  onPressed: currentSubmissionStatus == null && uniqueDisplayId != null && correctAnswerForDisplay != null
+                      ? () { FocusScope.of(context).unfocus(); _checkAnswer(uniqueDisplayId, correctAnswerForDisplay, actualQuestionType); }
                       : null,
                   child: Text(currentSubmissionStatus == null ? '정답 확인' : '채점 완료'),
+                  style: ElevatedButton.styleFrom(padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8), textStyle: const TextStyle(fontSize: 13)),
                 ),
-                if (currentSubmissionStatus != null) ...[
+                if (currentSubmissionStatus != null && uniqueDisplayId != null) ...[
                   const SizedBox(width: 8),
-                  TextButton(onPressed: () => _tryAgain(uniqueDisplayId!), child: const Text('다시 풀기')),
+                  TextButton(onPressed: () => _tryAgain(uniqueDisplayId), child: const Text('다시 풀기')),
                 ],
               ],
             ),
-            if (currentSubmissionStatus != null) ...[
+            if (currentSubmissionStatus != null && correctAnswerForDisplay != null) ...[
               const SizedBox(height: 8),
               Text(
                 currentSubmissionStatus == true ? '정답입니다! 👍' : '오답입니다. 👎',
@@ -370,19 +396,19 @@ class _QuestionBankPageState extends State<QuestionBankPage> {
               Text('입력한 답: ${userSubmittedAnswerForDisplay ?? ""}'),
               Text('실제 정답: $correctAnswerForDisplay'),
             ],
-          ] else if (correctAnswerForDisplay != null && actualQuestionType != "발문") ...[
-            // TextField 없이 정답만 표시 (예: 그림 유형에 대한 설명 답안)
-            Padding( // 정답 표시에 약간의 상단 간격
-              padding: const EdgeInsets.only(top: 4.0),
-              child: Text('정답: $correctAnswerForDisplay', style: const TextStyle(color: Colors.blue, fontWeight: FontWeight.w500)),
-            ),
-          ] else if (actualQuestionType != "발문" && correctAnswerForDisplay == null && showQuestionText) ...[
-            // showQuestionText가 true일 때만 이 메시지 표시 (주 문제의 TextField만 표시하는 경우 중복 방지)
-            const Padding(
-              padding: EdgeInsets.only(top: 4.0),
-              child: Text("텍스트 정답이 제공되지 않는 유형입니다.", style: TextStyle(fontStyle: FontStyle.italic, fontSize: 13, color: Colors.grey)),
-            )
           ]
+          // 3. 답변 불가능하지만 정답이 있는 경우 (예: 그림 문제의 설명 답안)
+          else if (correctAnswerForDisplay != null && actualQuestionType != "발문")
+            Padding(
+              padding: EdgeInsets.only(top: 4.0, left: (showQuestionText ? 0 : 8.0)), // 질문 텍스트 없을땐 들여쓰기
+              child: Text('정답: $correctAnswerForDisplay', style: const TextStyle(color: Colors.blue, fontWeight: FontWeight.w500)),
+            )
+          // 4. 답변 불가능하고 정답도 없는 경우 (단, 발문이 아닐 때 + 질문이 표시되었을 때만 이 메시지)
+          else if (actualQuestionType != "발문" && correctAnswerForDisplay == null && showQuestionText)
+              const Padding(
+                padding: EdgeInsets.only(top: 4.0),
+                child: Text("텍스트 정답이 제공되지 않는 유형입니다.", style: TextStyle(fontStyle: FontStyle.italic, fontSize: 13, color: Colors.grey)),
+              )
         ],
       ),
     );
@@ -395,8 +421,8 @@ class _QuestionBankPageState extends State<QuestionBankPage> {
       appBar: CSAppBar(title: widget.title),
       body: Column(
         children: [
-          // --- 등급 선택 및 문제 수 입력 UI ---
-          Padding( /* ... 이전과 동일 ... */
+          // --- 상단 컨트롤 UI ---
+          Padding(
             padding: const EdgeInsets.fromLTRB(12.0, 12.0, 12.0, 8.0),
             child: Column(
               children: [
@@ -446,45 +472,119 @@ class _QuestionBankPageState extends State<QuestionBankPage> {
               child: Text(_selectedGrade == null ? '먼저 등급과 문제 수를 선택하고 시험지를 생성하세요.' : '선택한 등급의 문제가 없거나, 문제 수가 유효하지 않습니다.', textAlign: TextAlign.center),
             ))
                 : ListView.builder(
-              padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 4.0),
-              itemCount: _randomlySelectedQuestions.length, // 주 문제의 개수
+              padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
+              itemCount: _randomlySelectedQuestions.length,
               itemBuilder: (context, index) {
                 final mainQuestionData = _randomlySelectedQuestions[index];
-                final String pageOrderNo = "${index + 1}"; // 4. 페이지 내 순서
+                final String pageOrderNo = "${index + 1}";
                 final String? originalNo = mainQuestionData['no'] as String?;
                 final String type = mainQuestionData['type'] as String? ?? '';
-                final String questionText = (mainQuestionData['question'] as String? ?? ''); // newline 처리됨
+                final String questionTextForSubtitle = (mainQuestionData['question'] as String? ?? '');
                 final String uniqueId = mainQuestionData['uniqueDisplayId'] as String;
-                final String sourceExamId = mainQuestionData['sourceExamId'] as String? ?? '출처 미상'; // 3. 출처
+                final String sourceExamId = mainQuestionData['sourceExamId'] as String? ?? '출처 미상';
 
-                // 3. 문제 제목에 출처 표시, "발문" 타입 숨기기
-                String titleDisplayType = (type == "발문" || type.isEmpty) ? "" : " ($type)";
-                String mainTitleText = '문제 $pageOrderNo $titleDisplayType ($sourceExamId $originalNo번)';
+                String titleTypeDisplay = (type == "발문" || type.isEmpty) ? "" : " ($type)";
+                String mainTitleText = '문제 $pageOrderNo (출처: $sourceExamId - 원본 ${originalNo ?? "N/A"}번)';
 
                 return Card(
-                  margin: const EdgeInsets.symmetric(vertical: 5.0, horizontal: 4.0),
-                  elevation: 1.0,
+                  margin: const EdgeInsets.symmetric(vertical: 6.0),
+                  elevation: 1.5,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.0)),
                   child: ExpansionTile(
                     key: ValueKey(uniqueId),
-                    tilePadding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-                    // 5. 원본 문제 반복 현상 해결: 주 문제 질문은 subtitle로, 인터랙티브 부분은 children으로
-                    title: Text(mainTitleText, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16.0)),
-                    subtitle: questionText.isNotEmpty
+                    tilePadding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 10.0),
+                    // 요청 6: 하위 문제 칸 왼쪽 정렬을 위해 expandedCrossAxisAlignment 추가
+                    expandedCrossAxisAlignment: CrossAxisAlignment.start,
+                    // childrenPadding을 0으로 설정하고, 각 _buildQuestionInteractiveDisplay에서 leftIndent로 제어
+                    childrenPadding: EdgeInsets.zero,
+                    title: Text(mainTitleText, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16.5)),
+                    subtitle: questionTextForSubtitle.isNotEmpty
                         ? Padding(
-                      padding: const EdgeInsets.only(top: 4.0),
-                      child: Text(questionText, style: TextStyle(fontSize: 14.5, color: Colors.grey[800])),
+                      padding: const EdgeInsets.only(top: 5.0),
+                      child: Text(questionTextForSubtitle, style: TextStyle(fontSize: 15.0, color: Colors.black87, height: 1.4)),
                     )
                         : null,
-                    initiallyExpanded: _randomlySelectedQuestions.length == 1,
-                    // ExpansionTile의 children에는 _buildQuestionHierarchyWidgets 호출 결과만 넣음
-                    // _buildQuestionHierarchyWidgets의 첫 번째 호출은 주 문제에 대한 것 (showQuestionText: false)
-                    childrenPadding: const EdgeInsets.only(left: 8.0, right: 8.0, bottom: 8.0), // children 내부 공통 패딩
-                    children: _buildQuestionHierarchyWidgets(
-                      questionData: mainQuestionData,
-                      currentIndent: 0, // 주 문제의 인터랙티브 부분은 기본 들여쓰기
-                      currentOrderPrefix: "└ (풀이)", // 주 문제의 풀이 부분임을 나타내는 접두사
-                      showQuestionTextForThisLevel: false, // 주 문제 질문은 subtitle로 갔으므로 여기선 false
-                    ),
+                    initiallyExpanded: _randomlySelectedQuestions.length <= 3,
+                    children: <Widget>[ // ExpansionTile의 children은 항상 List<Widget>
+                      // 요청 1 & 5: 주 문제 반복 해결 및 주 문제 풀이 영역
+                      // _buildQuestionWidgetsRecursive를 직접 호출하지 않고,
+                      // 주 문제의 풀이 부분과 하위 문제 부분을 명시적으로 구성
+                      _buildQuestionInteractiveDisplay(
+                        questionData: mainQuestionData,
+                        leftIndent: 16.0, // ExpansionTile children 기본 들여쓰기
+                        displayNoWithPrefix: "풀이${titleTypeDisplay}", // 주 문제의 풀이 영역임을 명시
+                        questionTypeToDisplay: titleTypeDisplay,
+                        showQuestionText: false
+                      ),
+                      // 하위 문제들 (sub_questions)
+                      Builder(builder: (context) { // Builder를 사용하여 로컬 변수 사용
+                        List<Widget> subQuestionAndSubSubWidgets = [];
+                        final dynamic subQuestionsField = mainQuestionData['sub_questions'];
+                        if (subQuestionsField is Map<String, dynamic> && subQuestionsField.isNotEmpty) {
+                          if (mainQuestionData.containsKey('answer') || (mainQuestionData['type'] != "발문" && (subQuestionsField).isNotEmpty )) {
+                            subQuestionAndSubSubWidgets.add(const Divider(height: 12, thickness: 0.5, indent:16, endIndent:16));
+                          }
+                          Map<String, dynamic> subQuestionsMap = subQuestionsField;
+                          List<String> sortedSubKeys = subQuestionsMap.keys.toList();
+                          sortedSubKeys.sort((a, b) => (int.tryParse(a) ?? 99999).compareTo(int.tryParse(b) ?? 99999));
+
+                          int subOrderCounter = 0;
+                          for (String subKey in sortedSubKeys) {
+                            final dynamic subQuestionValue = subQuestionsMap[subKey];
+                            if (subQuestionValue is Map<String, dynamic>) {
+                              subOrderCounter++;
+                              String subQuestionOrderPrefix = "($subOrderCounter)";
+
+                              // 각 하위 문제에 대해 _buildQuestionInteractiveDisplay 직접 호출 (재귀 대신)
+                              final String SubType = subQuestionValue['type'] as String? ?? '';
+                              String subtitleTypeDisplay = (SubType == "발문" || SubType.isEmpty) ? "" : " ($SubType)";
+                              subQuestionAndSubSubWidgets.add(
+                                  _buildQuestionInteractiveDisplay(
+                                    questionData: Map<String, dynamic>.from(subQuestionValue),
+                                    leftIndent: 24.0, // 하위 문제 들여쓰기 (16 + 8)
+                                    displayNoWithPrefix: subQuestionOrderPrefix,
+                                    questionTypeToDisplay: subtitleTypeDisplay,
+                                    showQuestionText: true,
+                                  )
+                              );
+
+                              // 하위-하위 문제 처리 (sub_sub_questions)
+                              final dynamic subSubQuestionsField = subQuestionValue['sub_sub_questions'];
+                              if (subSubQuestionsField is Map<String, dynamic> && subSubQuestionsField.isNotEmpty) {
+                                Map<String, dynamic> subSubQuestionsMap = subSubQuestionsField;
+                                List<String> sortedSubSubKeys = subSubQuestionsMap.keys.toList();
+                                sortedSubSubKeys.sort((a,b) => (int.tryParse(a) ?? 99999).compareTo(int.tryParse(b) ?? 99999));
+
+                                int subSubOrderCounter = 0;
+                                for (String subSubKey in sortedSubSubKeys) {
+                                  final dynamic subSubQValue = subSubQuestionsMap[subSubKey];
+                                  if (subSubQValue is Map<String, dynamic>) {
+                                    subSubOrderCounter++;
+                                    String subSubQDisplayNo = "($subSubOrderCounter)";
+
+                                    final String subSubType = subSubQValue['type'] as String? ?? '';
+                                    String subSubtitleTypeDisplay = (subSubType == "발문" || subSubType.isEmpty) ? "" : " ($subSubType)";
+                                    subQuestionAndSubSubWidgets.add(
+                                        _buildQuestionInteractiveDisplay(
+                                          questionData: Map<String, dynamic>.from(subSubQValue),
+                                          leftIndent: 32.0, // 하위-하위 문제 들여쓰기 (24 + 8)
+                                          displayNoWithPrefix: "- $subSubQDisplayNo",
+                                          questionTypeToDisplay: subSubtitleTypeDisplay,
+                                          showQuestionText: true,
+                                        )
+                                    );
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                        if (subQuestionAndSubSubWidgets.isEmpty && mainQuestionData['type'] == "발문" && !(mainQuestionData.containsKey('answer') && mainQuestionData['answer'] != null) ) {
+                          return Padding(padding: EdgeInsets.all(16.0), child: Text("하위 문제가 없습니다.", style: TextStyle(fontStyle: FontStyle.italic)));
+                        }
+                        return Column(crossAxisAlignment: CrossAxisAlignment.start, children: subQuestionAndSubSubWidgets);
+                      })
+                    ],
                   ),
                 );
               },
