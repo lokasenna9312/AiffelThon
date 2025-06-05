@@ -109,7 +109,7 @@ class _MainPageState extends State<MainPage> {
           TextField(
             controller: pw_input,
             obscureText: true,
-            decoration: InputDecoration(labelText: '비밀번호 : ')
+            decoration: InputDecoration(labelText: 'PW : ')
           ),
           Row( // 버튼들을 가로로 배치
             mainAxisAlignment: MainAxisAlignment.spaceAround, // 버튼 사이에 공간을 줌
